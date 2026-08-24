@@ -1,0 +1,28 @@
+# FPA 后端依赖 —— 技术栈为既定选型，不得替换
+#
+# 明确不引入：SQLAlchemy / Alembic（既定选型是 PyMySQL，迁移用手写编号 SQL + 单一 runner）、
+#            FastAPI（既定选型是 Flask）、Redis、任何 ORM。
+
+Flask==3.1.3
+PyMySQL==1.1.2
+gunicorn==23.0.0
+
+# WSGI 服务器：`tools/serve_dev.py` 实际用它（Windows 上 gunicorn 依赖 fcntl、不可用）。
+# **缺了它会直接 ImportError**，所以必须在这里，不能只靠开发机已装。
+waitress==3.0.2
+
+# 校验与序列化：字段声明 -> Pydantic 模型
+pydantic==2.12.4
+PyYAML==6.0.3
+
+# 密码哈希（scrypt，标准库 hashlib 即可，不引入 passlib）
+# 会话与令牌用标准库 secrets
+
+# --- 测试 ---
+pytest==8.3.5
+pytest-cov==6.0.0
+
+# --- DeepSeek Harness ---
+# Python SDK 由本地运行时 wheel 提供（dev 环境已安装 editable 版），
+# 生产安装见 docs/DEPLOY.md。此处不锁版本，避免与本地 runtime-bin 冲突。
+deepseek-harness-sdk

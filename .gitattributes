@@ -1,0 +1,32 @@
+# 统一换行风格。
+#
+# 早期版本的教训：旧 `.gitattributes` 只声明了 `*.sh text eol=lf`，于是 `*.sql` 的
+# 换行风格由 core.autocrlf 决定 —— Windows 上检出为 CRLF，而四份迁移 runner 用了
+# 三种校验和算法，互相判「迁移校验和漂移」（实测 7/35 个文件是 CRLF）。
+#
+# 本项目原则：所有文本文件在仓库与工作区都统一为 LF，由
+# tools/check_source_hygiene.py 在提交前强制。
+
+* text=auto eol=lf
+*.sh   text eol=lf
+*.sql  text eol=lf
+*.py   text eol=lf
+*.ts   text eol=lf
+*.vue  text eol=lf
+*.md   text eol=lf
+*.json text eol=lf
+*.yml  text eol=lf
+*.yaml text eol=lf
+*.css  text eol=lf
+*.html text eol=lf
+
+# 二进制文件不参与换行转换
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
+*.woff  binary
+*.woff2 binary
+*.xlsx  binary
+*.docx  binary

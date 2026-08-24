@@ -1,0 +1,52 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+.ruff_cache/
+.mypy_cache/
+
+# --- Node ---
+node_modules/
+dist/
+release/
+*.tsbuildinfo
+.vite/
+coverage/
+playwright-report/
+test-results/
+blob-report/
+
+# --- 环境与密钥（绝不入库）---
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# --- 运行期数据 ---
+.dsh-home/
+.dsh-*
+.store/
+.agent-sidecar/
+attachments/
+*.log
+tmp/
+state/
+.worklog/
+
+# --- 临时产物 ---
+.tmp-*/
+.tmp*
+.verify-*/
+.repro-*/
+
+# --- 编辑器 ---
+.vscode/
+.idea/
+*.swp
