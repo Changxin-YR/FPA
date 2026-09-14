@@ -1,0 +1,128 @@
+/**
+ * 设计令牌——**全项目唯一一套**。
+ *
+ * ## 方向：商务冷静（Enterprise Calm）
+ *
+ * 质量来自**间距、对齐、排版纪律**，不来自装饰。因此这里明确**不提供**：
+ * 渐变背景 / 光晕 / 毛玻璃 / 大圆角 / 重阴影 / 高饱和色块。
+ *
+ * 色板刻意做成**中性灰底 + 克制的领域青绿**：底不用青绿铺（那会显得"廉价"），
+ * 青绿只作**强调色**小面积出现。圆角统一 6px（12–14px 是"活泼感"的来源）。
+ *
+ * ## 早期版本的教训（.local/recon-frontend.md 问题 P-9 / P-11）
+ *
+ * 早期版本 `tokens.css` 的 `--auth-*`（15 个）与 `workbench.css:1-27` 的 `--wb-*`（26 个）
+ * **同名同值并存**；`auth.css:1-24` 的整套暗色主题被同文件第 25 行起的浅色规则
+ * **整体覆盖**，成为层叠链里的死代码。新项目只有这一个令牌文件、一套前缀、一份取值，
+ * 且**组件里禁止再出现裸 hex**（有守卫）。
+ */
+:root {
+  /* 底色与层次：中性灰，不是青绿 */
+  --tone-bg: #eef5f3;
+  --tone-surface: #ffffff;
+  --tone-surface-soft: #f7faf9;
+  --tone-line: #dce7e4;
+  --tone-line-strong: #c8d8d4;
+
+  /* 文字：三档即可，多则乱 */
+  --tone-ink: #1f2733;
+  --tone-ink-soft: #5a6473;
+  --tone-muted: #8a94a3;
+
+  /* 品牌：领域青绿，降饱和、加深，只作强调 */
+  --tone-primary: #2f8175;
+  --tone-primary-strong: #24675e;
+  --tone-primary-soft: #e8f4f1;
+
+  /* 状态：降饱和，各自配一个 ~8% 的淡底色（状态胶囊用） */
+  --tone-info: #2f6fb0;
+  --tone-info-soft: #eef4fb;
+  --tone-success: #2f7d5f;
+  --tone-success-soft: #edf6f1;
+  --tone-warning: #a8842c;
+  --tone-warning-soft: #fbf5e9;
+  --tone-danger: #b1443f;
+  --tone-danger-soft: #fbf0ef;
+  /* 主色实心底上的文字色；行 hover 底色 */
+  --tone-on-primary: #ffffff;
+  --tone-row-hover: #f8fafb;
+
+  --tone-neutral: #6b7684;
+  --tone-neutral-soft: #f1f3f6;
+  /* 提示类色块的边框：比底色深一档即可，别用状态色本身（太吵） */
+  --tone-info-line: #d3e0f2;
+  --tone-success-line: #c9e3d7;
+  --tone-warning-line: #eadcbb;
+  --tone-danger-line: #e8c9c7;
+
+  /* 形状与深度：圆角克制、阴影近乎不可见 */
+  --tone-radius: 6px;
+  --tone-radius-sm: 4px;
+  --tone-shadow-card: 0 2px 10px rgba(27, 74, 68, 0.06);
+  --tone-shadow-header: 0 1px 8px rgba(27, 74, 68, 0.04);
+  --tone-focus-ring: 0 0 0 3px rgba(31, 111, 99, 0.18);
+
+  /* 尺度：外壳与控件 */
+  --tone-nav-width: 232px;
+  --tone-nav-bg: #214e49;
+  --tone-nav-bg-strong: #193e3a;
+  --tone-nav-ink: #e3f1ee;
+  --tone-nav-muted: #a5c6c0;
+  --tone-nav-active: #2d6b64;
+  --tone-nav-hover: rgba(255, 255, 255, 0.08);
+  --tone-nav-line: rgba(255, 255, 255, 0.12);
+  --tone-nav-line-strong: rgba(255, 255, 255, 0.22);
+  --tone-nav-shadow: rgba(21, 56, 52, 0.16);
+  --tone-success-light: #72d2c2;
+  --tone-header-surface: rgba(255, 255, 255, 0.96);
+  --tone-header-height: 60px;
+  --tone-control-height: 34px;
+  --tone-motion: 120ms;
+  --tone-content-max: 1600px;
+  --tone-overlay: rgba(25, 59, 57, 0.35);
+
+  font-family: 'Avenir Next', 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', system-ui, sans-serif;
+  color: var(--tone-ink);
+  background: var(--tone-bg);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-width: 320px;
+  min-height: 100%;
+  margin: 0;
+  background: var(--tone-bg);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+/* 数据密集界面：表格数字必须等宽，否则列右对齐也看不出对齐 */
+table {
+  font-variant-numeric: tabular-nums;
+}
+
+/* 统一焦点可见性——早期版本只在 auth.css 末尾声明了一次全局 focus-visible */
+:focus-visible {
+  outline: 2px solid var(--tone-primary);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
