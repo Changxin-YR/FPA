@@ -272,10 +272,10 @@ def turn_result(turn: Any, registry: Any) -> dict[str, Any]:
             payload["confirmations"] = pending.get(
                 "confirmations", [pending["confirmation"]]
             )
-        return payload
+        return _guard_fake_confirmation(payload)
 
     if pending is not None:
-        return pending
+        return _guard_fake_confirmation(pending)
 
     asked = clarification_result(
         getattr(turn, "clarification", None),
@@ -283,9 +283,22 @@ def turn_result(turn: Any, registry: Any) -> dict[str, Any]:
         reply=turn.reply,
     )
     if asked is not None:
-        return asked
+        return _guard_fake_confirmation(asked)
 
-    return {"kind": "assistant", "conversation_id": conversation_id, "message": turn.reply}
+    # ★ 末道闸：防模型**只说不做**。
+    #
+    # 实测（2026-09-16）：模型建塘口 → 提交核验 → 然后回一句
+    # 「请在界面上确认执行核验操作」，**却从没调用 `pond.verify`**。
+    # 会话日志里只有 area_list / pond_create / pond_submit，
+    # `agent_confirmations` 也没有新行 —— 系统里根本没有待确认卡片，
+    # 而用户看到的是“要求我确认，但按钮不出现”。
+    #
+    # 这与本仓一贯的口径一致：**“待确认”这个状态只能由服务端签发**，
+    # 不能让模型用一句话凭空宣布。所以这里不改模型正文，只在后面**补一句
+    # 服务端自己的说明**，把“系统里到底有没有卡”如实告诉用户。
+    return _guard_fake_confirmation(
+        {"kind": "assistant", "conversation_id": conversation_id, "message": turn.reply}
+    )
 
 
 def resolve_gateway_url(settings: Settings, *, port: int | None = None) -> str:
@@ -573,6 +586,52 @@ def build_agent_turn_handler(
         return turn_result(turn, registry)
 
     return handle
+
+
+#: 模型"只说不做"的判据：正文里出现这些词、但系统**没有签发任何待确认卡片**。
+_FAKE_CONFIRMATION_HINTS = (
+    "请确认执行",
+    "点击确认",
+    "请点击确认",
+    "确认卡片",
+    "等待您确认",
+    "等你确认",
+    "请在界面上确认",
+)
+
+
+def _guard_fake_confirmation(payload: dict[str, Any]) -> dict[str, Any]:
+    """正文宣称“有待确认操作”、但这一轮**没签发任何卡片**时，补一句服务端说明。
+
+    为什么必须在服务端拦：实测（2026-09-16）模型建塘口 → 提交核验 →
+    回一句「请在界面上确认执行核验操作」，**却从没调用 `pond.verify`**：
+    会话日志里只有 area_list / pond_create / pond_submit，`agent_confirmations`
+    也没有新行。用户看到的是“要求我确认，但按钮不出现”。
+
+    与本仓一贯口径一致：**“待确认”这个状态只能由服务端签发**。
+    所以不改模型正文，只在后面补一句服务端自己的说明。
+    """
+    if payload.get("confirmation") or payload.get("confirmations"):
+        return payload
+    if payload.get("kind") not in ("assistant", "executed"):
+        return payload
+    if not _claims_pending_confirmation(str(payload.get("message") or "")):
+        return payload
+    payload["message"] = (
+        f"{payload.get('message') or ''}\n\n"
+        "（系统提示：本轮**没有**生成待确认卡片，上面提到的「确认执行」并未发生。"
+        "请让我用工具重新发起该操作。）"
+    )
+    return payload
+
+
+def _claims_pending_confirmation(reply: str) -> bool:
+    """正文是否在宣称“有一个待确认操作在等你”。
+
+    只在**没有任何待确认卡片**时才调用（调用点在 `pending` 为 None 之后）。
+    """
+    text = str(reply or "")
+    return any(hint in text for hint in _FAKE_CONFIRMATION_HINTS)
 
 
 __all__ = [
