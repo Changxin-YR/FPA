@@ -592,6 +592,19 @@ class Capability:
                 schema = {"type": "string"}
                 if item.choices:
                     schema["enum"] = [choice.value for choice in item.choices]
+                elif item.kind == "status" and resource.workflow is not None:
+                    # `kind="status"` 的候选值是**运行时**从状态机解析的，声明里没有
+                    # `choices`（那个字段只服务 `kind="enum"`）。不下发候选值的后果：
+                    # 工具的 JSON Schema 里这个参数是**裸 string**，模型只能猜；
+                    # 猜错不报错、只是匹配不到任何行 ——
+                    # 实测 2026-09-15：模型填 `batch_status="active"`，接口回
+                    # 200 + 空列表，于是它把「养殖中 0 个」当事实报给用户（真实 1 个）。
+                    # 这属于「静默给出错误答案」，比报错危险。
+                    # 候选值取该资源状态机的全部状态码（文档状态 + 业务状态）。这是
+                    # **超集**守卫：挡不住拿 `status` 的值去填 `batch_status`，但能挡住
+                    # 完全编造的值。逐参数精确到具体状态机，需要"哪条筛选属于哪个
+                    # 状态机"的声明，本仓还没有这一层。
+                    schema["enum"] = [state.code for state in resource.workflow.states]
             schema["description"] = item.label
             for name in item.param_names:
                 properties[name] = dict(schema)

@@ -300,6 +300,12 @@ RESOURCES.register(
         #   它喂给执行器的不变量上下文（`_resource_table`），决定 `OptimisticLock`
         #   与 `StateTransition(machine="*")` 查哪张表 —— 算错会让这些规则报"表不存在"
         #   而不是静默放行，但错误位置离声明处很远（cost 域实测踩过一次）。
+        # ★ 服务支持 keyword 模糊搜索（`ponds.py` 的 `keyword` 分支），但资源声明
+        #   没开 `search` —— 后果是**人能用、Agent 不能用**：
+        #   `GET /api/v1/ponds?keyword=…` 正常返回，Agent 的 `pond_list` 却被
+        #   `gateway._invocation_params` 判为「查询参数未在资源声明中开放」。
+        #   同一件事两处描述，其中一处漏了。
+        search=True,
         table="ponds",
         workflow=POND_WORKFLOW,
         columns=(

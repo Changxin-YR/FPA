@@ -138,6 +138,35 @@ class UnitOfWorkFactory(Protocol):
     def __call__(self) -> UnitOfWork: ...
 
 
+def _validate_query_values(spec: Capability, query: dict[str, Any]) -> None:
+    """只读能力的查询参数：**取值**必须落在声明里（不只校验参数名）。
+
+    为什么必须有这条：`kind="status"` 的候选值来自状态机、是枚举；非法值
+    一路落到 SQL 只是匹配不到行 —— 接口回 200 + 空列表，调用方会把
+    「查不到」当成「没有」。实测 2026-09-15：模型把 `batch_status` 填成
+    `"active"`（一个不存在的状态），据此向用户宣称「养殖中 0 个」——
+    真实是 1 个。这类“静默给出错误答案”比直接报错危险得多。
+
+    只校验**声明了候选值的参数**（`read_query_schema()` 里带 `enum` 的），
+    其余（page/page_size、ref、date_range、boolean）原样放行；空值放行
+    （前端未选中的筛选会发空串）。
+    """
+    schema = spec.read_query_schema()
+    for name, value in query.items():
+        field = schema.get(name)
+        if not isinstance(field, dict):
+            continue
+        allowed = field.get("enum")
+        if not allowed or value is None or value == "":
+            continue
+        if value not in allowed:
+            raise DomainError(
+                ErrorCode.VALIDATION_ERROR,
+                f"查询参数 {name} 的取值不在允许范围内",
+                data={"parameter": name, "allowed": list(allowed)},
+            )
+
+
 class CapabilityRunner:
     """把 `Capability` 声明变成一次受控的业务调用。"""
 
@@ -170,6 +199,7 @@ class CapabilityRunner:
         raw = invocation.raw_payload if invocation.raw_payload is not None else invocation.payload
         if spec.is_read:
             cleaned: dict[str, Any] = {}
+            _validate_query_values(spec, invocation.query)
         else:
             cleaned = validate_payload(spec, raw, for_update=spec.kind == "update")
 
