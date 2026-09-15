@@ -158,12 +158,26 @@ function confirmationsOf(result: AgentTurnResult): AgentConfirmation[] {
  * 新结果（`executed` / `cancelled`）说的是**那一张**，不能顺手把还没处理的其余卡片清掉。
  * 结果自己带了卡片时以结果为准 —— 卡片永远来自服务端，界面不自造。
  */
-function applyResult(result: AgentTurnResult, keepConfirmations: AgentConfirmation[] = []): void {
+function applyResult(result: AgentTurnResult, keepConfirmations?: AgentConfirmation[]): void {
   conversationId.value = 'conversation_id' in result ? result.conversation_id : conversationId.value
 
-  // 先结清上一批卡片：任何新结果都意味着旧确认已失效（除非它带回新的一批）
+  // 先结清上一批卡片：**结果带回新的一批时以结果为准**；
+  // 没带回时**保留仍然有效的旧卡** —— 不能清空。
+  //
+  // 为什么：确认令牌只在**签发它的那一次响应**里出现过，服务端没有补发入口。
+  // 用户没点确认就又发了一句话，若这里把卡片清掉，那张卡就**永远无法确认**；
+  // 用户看到的是「模型让我确认执行，但确认按钮不出现」（实测反馈）。
+  // 而在库里它仍然是 pending（直到过期），所以保留是对的。
   const fromResult = confirmationsOf(result)
-  confirmations.value = fromResult.length ? fromResult : keepConfirmations
+  // ★ 区分两种「没带卡」：
+  //   * `keepConfirmations === undefined` = 浏览器发起的新一轮（`send`）
+  //     → 保留尚未过期的旧卡（否则用户没点就再发一句，卡片就永远确认不了）；
+  //   * 显式传入（`settle`，已经把本张卡摘掉了）→ 原样使用，
+  //     **空列表就是空列表**，不能把刚确认的卡又捡回来。
+  const carried = keepConfirmations !== undefined
+    ? keepConfirmations
+    : confirmations.value.filter((item) => !cardExpired(item))
+  confirmations.value = fromResult.length ? fromResult : carried
   clarification.value = undefined
 
   switch (result.kind) {
