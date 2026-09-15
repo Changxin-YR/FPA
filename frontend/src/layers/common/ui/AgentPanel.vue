@@ -278,8 +278,23 @@ async function submitText(text: string): Promise<void> {
       }
     }
 
+    // ★★ 多步一轮：流式正文里有**前面各步**，而 `result.message` 只是**最后一步**那句。
+    //
+    // harness 的 `final_response` 取的是最后一条 assistant 消息，而一轮里每一步
+    // 都会流出一段正文。早先这里无条件 `clearStreaming()`，于是把多步指令
+    // 一次性发过去时，**前面几步的过程与数据在 result 到达瞬间整体消失**，
+    // 用户只看得到最后一步（实测反馈原话：「前一步骤的结果被后一部分覆盖」）。
+    //
+    // 现在：若流出的正文**以权威正文收尾**，把那一段剪掉后把剩下的过程
+    // 留成一条消息（身上不重复）；两边都不含对方时则整段保留。
+    const streamed = streamingText.value.trim()
+    const finalText = 'message' in result ? String(result.message ?? '').trim() : ''
+    const leading = streamed && finalText && streamed.endsWith(finalText)
+      ? streamed.slice(0, streamed.length - finalText.length).trim()
+      : streamed
+    if (leading && leading !== finalText) append('assistant', leading)
     applyResult(result)
-    // 正文已由 `result.message` 交付 —— 流式缓冲到此为止，不留第二份。
+    // 尾部已由 `result.message` 交付 —— 缓冲到此为止，不留第二份。
     clearStreaming()
   } catch (caught) {
     // 出错时没有权威正文，用户已经看过的流式文字不能凭空消失（早期版本问题 P-6）。
@@ -448,6 +463,13 @@ defineExpose({
         data-testid="agent-pending"
       >
         <!-- ③ confirmation_required：确认卡片（同一轮可能签出多张，逐张确认） -->
+        <p
+          v-if="confirmations.length > 1"
+          class="agent-panel__pending-count"
+          data-testid="agent-confirmation-count"
+        >
+          本轮共 {{ confirmations.length }} 项待确认：每张卡片的「确认执行」**只作用于它自己**，请逐张确认。
+        </p>
         <div
           v-for="card in confirmations"
           :key="card.id"
