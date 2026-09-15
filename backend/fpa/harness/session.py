@@ -532,6 +532,25 @@ def _load_json_object(raw: Any) -> dict[str, Any] | None:
     return parsed if isinstance(parsed, dict) else None
 
 
+_SESSION_LOG_BROKEN_MARKERS = (
+    "must have tool source",
+    "session event at seq",
+)
+
+
+def _is_session_log_broken(detail: str) -> bool:
+    """事件日志是否已损坏到**无法回放**。
+
+    实测 2026-09-15：模型一轮里并发发了 6 个工具调用，只有第 1 个拿到 callId，
+    其余是空串；harness 校验 `source.callId !== ""` 后抛
+    「session event at seq 54 message must have tool source」。
+    这份坏日志会被**每一轮**回放，于是该会话之后每一次提问都失败 ——
+    用户看到的表现就是“助手卡了很久、再也不回话”。
+    """
+    text = str(detail or "")
+    return any(marker in text for marker in _SESSION_LOG_BROKEN_MARKERS)
+
+
 class HarnessSessionManager:
     """按会话持有 Harness 实例。
 
@@ -583,6 +602,32 @@ class HarnessSessionManager:
                 closer()
             except Exception:  # noqa: BLE001
                 pass
+
+    def _quarantine_session_log(self, session_id: str) -> None:
+        """把这个会话的**磁盘事件日志**挪走，让下一轮从干净会话开始。
+
+        为什么必须动磁盘：harness 的事件日志是**追加在文件里**的
+        （``<DSH_HOME>/sessions/<cwd>/<session_id>/session.jsonl.zstd``），
+        子进程重建后会**重新加载它**。所以只 `drop()` 子进程没用 ——
+        同一个 conversation_id 下一轮照样读到那份坏日志。
+        """
+        home = str(getattr(self.settings, "agent_dsh_home", "") or "")
+        if not home or not session_id:
+            return
+        import glob
+        import os
+        import shutil
+        import time
+
+        for path in glob.glob(os.path.join(home, "sessions", "*", session_id)):
+            if not os.path.isdir(path):
+                continue
+            target = "%s.broken-%d" % (path, int(time.time()))
+            try:
+                shutil.move(path, target)
+                logger.warning("会话日志已隔离（损坏，无法回放）：%s -> %s", path, target)
+            except OSError:  # pragma: no cover
+                logger.warning("隔离会话日志失败：%s", path, exc_info=True)
 
     # -- 运行 -----------------------------------------------------------------
 
@@ -683,6 +728,14 @@ class HarnessSessionManager:
                 (health or {}).get("retry_count", 0),
                 detail or "（事件里没有错误信息）",
             )
+            # ★ 终端失败也要丢弃会话；若坏的是**磁盘日志**，必须连日志一起隔离。
+            #
+            # 只 `drop()` 不够：日志追加在文件里，新子进程会重新加载它，
+            # 于是同一个 conversation_id 的**每一轮**都会在回放时失败。
+            self.drop(session_key)
+            if _is_session_log_broken(detail):
+                self._quarantine_session_log(session_id)
+
             raise DomainError(
                 ErrorCode.AGENT_UNAVAILABLE,
                 "智能助手没有返回内容，请联系管理员检查助手配置"
