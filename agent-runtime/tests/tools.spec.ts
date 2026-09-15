@@ -323,6 +323,60 @@ describe('请求头与幂等键', () => {
     const call = calls[calls.length - 1]
     expect(call?.headers['Idempotency-Key']).toBe('fpa:feeding_verify:call-abc')
   })
+  it('rootCallId 是空串时仍然必须发键（线上 qwen-plus 的真实形态）', async () => {
+    // 2026-09-15 线上实测：Harness + qwen-plus 的 tool_call **没有 id**，
+    // 于是 callId / rootCallId 都是 ""。旧实现 `needsKey && rootCallId` 对空串判假，
+    // 幂等键被静默丢掉 —— 服务端对全部 48 个 `idempotent=true` 的写能力返回
+    // 400「请求必须携带 Idempotency-Key」，写功能整体不可用。
+    // 这条用例锁死"永远不能因为上游没给 id 就不发键"。
+    const calls = stubFetch((call) =>
+      call.url.endsWith('/tools')
+        ? jsonResponse(CATALOG)
+        : jsonResponse({ code: 'OK', data: { kind: 'read', data: [] } }),
+    )
+    const ctx = makeContext()
+    await apply(ctx as never, { gatewayUrl: GATEWAY, contextToken: TOKEN })
+
+    await runTool(ctx, 'feeding_verify', { feeding_id: 7, expected_version: 1 }, '')
+    const call = calls[calls.length - 1]
+    const key = call?.headers['Idempotency-Key']
+    expect(key).toBeTruthy()
+    // 服务端 `kernel/idempotency.py` 的格式契约：8–128 个 [A-Za-z0-9._:-]
+    expect(key).toMatch(/^[A-Za-z0-9._:-]{8,128}$/)
+    expect(key?.startsWith('fpa:feeding_verify:')).toBe(true)
+  })
+
+  it('兜底键逐次唯一，不能把两次不同调用去重成一次', async () => {
+    const calls = stubFetch((call) =>
+      call.url.endsWith('/tools')
+        ? jsonResponse(CATALOG)
+        : jsonResponse({ code: 'OK', data: { kind: 'read', data: [] } }),
+    )
+    const ctx = makeContext()
+    await apply(ctx as never, { gatewayUrl: GATEWAY, contextToken: TOKEN })
+
+    await runTool(ctx, 'feeding_verify', { feeding_id: 7, expected_version: 1 }, '')
+    await runTool(ctx, 'feeding_verify', { feeding_id: 8, expected_version: 1 }, '')
+    const keys = calls
+      .filter((call) => call.url.endsWith('/call'))
+      .map((call) => call.headers['Idempotency-Key'])
+    expect(keys).toHaveLength(2)
+    expect(keys[0]).not.toBe(keys[1])
+  })
+
+  it('不需要幂等键的能力不携带该 header（契约违规信号不能被抹掉）', async () => {
+    const calls = stubFetch((call) =>
+      call.url.endsWith('/tools')
+        ? jsonResponse(CATALOG)
+        : jsonResponse({ code: 'OK', data: { kind: 'read', data: [] } }),
+    )
+    const ctx = makeContext()
+    await apply(ctx as never, { gatewayUrl: GATEWAY, contextToken: TOKEN })
+
+    await runTool(ctx, 'pond_create', { code: 'P-X', name: 'x', area_id: 1 }, 'call-abc')
+    const call = calls[calls.length - 1]
+    expect(call?.headers['Idempotency-Key']).toBeUndefined()
+  })
 })
 
 describe('ask_user 工具', () => {

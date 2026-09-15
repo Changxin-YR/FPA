@@ -118,6 +118,18 @@ function scrubCredentialsFromEnv(keys: readonly string[]): void {
 }
 
 const SCRUBBED_ENV_KEYS = ['FPA_AGENT_CONTEXT_TOKEN', 'FPA_AGENT_GATEWAY_URL'] as const
+/**
+ * 幂等键的**本地兜底**：上游没有给 callId 时用它。
+ *
+ * 只需满足服务端的格式契约（8–128 个 `[A-Za-z0-9._:-]`）且**单进程内唯一**。
+ * 刻意不追求"跨重试稳定"——那种场景由 `rootCallId` 负责，根本走不到这里；
+ * 而"没有键 → 服务端 400 → 写能力整体不可用"是必须消灭的失败模式。
+ */
+let localCallSeq = 0
+function nextLocalCallId(): string {
+  localCallSeq += 1
+  return `noid-${Date.now().toString(36)}-${localCallSeq.toString(36)}`
+}
 
 function registerCatalogTool(
   ctx: Context,
@@ -151,20 +163,28 @@ function registerCatalogTool(
         render: (_args, value) => [{ type: 'text', text: JSON.stringify(value) }],
       },
       async execute(args, exec) {
-        // 属性名是 **rootCallId**，不是 callId。
+        // 幂等键的语义：**服务端声明 `idempotent=true` 的能力必须收到它**。
         //
-        // 初版写的是 `exec.callId`——那个属性在 Harness 的 `ToolExecution` 上不存在，
-        // 于是永远是 undefined，幂等键**静默不发**，服务端对 `idempotent=true`
-        // 的能力直接拒绝。这类缺陷既没有编译错误（有 `as` 断言）也没有运行时错误
-        // （只是 falsy），**表现为"功能没生效"而不是"功能报错"**。
+        // 取值优先级：`rootCallId` → `callId` → 本地兜底。
         //
-        // 用 rootCallId 而不是 token：`rootCallId` 的定义是
-        // "Root model-requested call, resolved for every root and nested execution"
-        // ——**同一次 root 调用跨重试稳定**，这正是幂等键需要的语义。
-        const rootCallId = (exec as { rootCallId?: string }).rootCallId
+        // 2026-09-15 线上实测（本地不复现）：Harness + qwen-plus 返回的 tool_call
+        // **没有 id**，`callId` 被记为 `""`，`rootCallId` 随之也是空串。旧写法
+        // `needsKey && rootCallId ? … : undefined` 对空串判假，于是幂等键**被静默
+        // 丢掉** —— 请求与响应都成功，只有 header 没发出去，服务端直接拒绝。
+        // 后果：48 个 `idempotent=true` 的写能力全部失效，模型只能报告
+        // 「系统强制要求 Idempotency-Key 而工具接口不支持」。
+        //
+        // 本地跑不出来：deepseek 系模型每次调用都带 `call_00_…`，永远走稳定分支。
+        // 这就是「本地绿、线上红」的成因。
+        //
+        // 兜底只保证**写入能落地**；跨重试去重退化为服务端的 request_hash 去重。
+        // 上游补上 callId 后自动回到稳定键，不需要再改这里。
+        const execIds = exec as { rootCallId?: string; callId?: string }
+        const stableCallId = execIds.rootCallId || execIds.callId
         const needsKey = spec.requires_idempotency_key === true
-        const idempotencyKey =
-          needsKey && rootCallId ? `fpa:${spec.name}:${rootCallId}` : undefined
+        const idempotencyKey = needsKey
+          ? `fpa:${spec.name}:${stableCallId || nextLocalCallId()}`
+          : undefined
 
         const outcome = await client.callTool(
           spec.name,
