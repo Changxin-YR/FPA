@@ -50,3 +50,8 @@ state/
 .vscode/
 .idea/
 *.swp
+
+# --- 本地工作目录 ---
+.local/
+.agent-teams/
+.verify/
