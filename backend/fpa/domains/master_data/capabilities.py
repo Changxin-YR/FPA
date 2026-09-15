@@ -45,6 +45,7 @@ from fpa.kernel.scope import ScopePolicy
 
 from .masterdata_write import AreaWriteService, FarmWriteService, MaterialWriteService
 from .ponds import PondService
+from .ponds import confirmation_labels as pond_confirmation_labels
 from .ponds_write import PondWriteService
 from .resources_read import AreaService, FarmService, MaterialService, PartnerService
 from .partners_write import PartnerWriteService
@@ -672,6 +673,7 @@ def _register_all() -> None:
             confirmation=Confirmation.ALWAYS,
             agent_exposure=_EXPOSED,
             idempotent=True,
+            confirmation_labels=pond_confirmation_labels,
             audit=AuditPolicy.snapshot(),
             description="修改塘口的台账信息（名称、区域、品种、面积等）。塘口业务状态不能在这里改，需走两步审批",
             invariants=(
@@ -731,6 +733,7 @@ def _register_all() -> None:
             risk=Risk.HIGH,
             agent_exposure=_EXPOSED,
             idempotent=True,
+            confirmation_labels=pond_confirmation_labels,
             audit=AuditPolicy.snapshot(),
             description="核验他人提交的塘口。经办人不能核验自己提交的",
             invariants=(
@@ -761,6 +764,7 @@ def _register_all() -> None:
             risk=Risk.HIGH,
             agent_exposure=_EXPOSED,
             idempotent=True,
+            confirmation_labels=pond_confirmation_labels,
             audit=AuditPolicy.snapshot(),
             description="归档草稿或已核验的塘口。归档不是删除——数据保留，只是退出业务视图",
             invariants=(
@@ -832,6 +836,7 @@ def _register_all() -> None:
             risk=Risk.HIGH,
             agent_exposure=_EXPOSED,
             idempotent=True,
+            confirmation_labels=pond_confirmation_labels,
             audit=AuditPolicy.snapshot(),
             description="核验塘口状态变更申请并真正变更状态。申请人不能核验自己的申请",
             invariants=(

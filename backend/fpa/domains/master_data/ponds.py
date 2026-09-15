@@ -287,3 +287,28 @@ def _page_params(params: dict[str, Any]):
     from fpa.domains._base import Page
 
     return Page.parse(params.get("page"), params.get("page_size"))
+
+
+def confirmation_labels(tx: UnitOfWork, payload: dict[str, Any]) -> dict[str, Any]:
+    """把塘口类确认卡上的**裸 id** 换成「编号（名称）」。
+
+    为什么必须有：实测（2026-09-15）`pond.verify` 的卡片 target 是
+    `pond_id=3` —— 用户看不出这是哪个塘口。而模型**会把编号当 id**：
+    它把「P-AI-03」解析成 id=3（真实 id 是 11）。裸 id 让这种错误在卡片上
+    **完全隐形**；把编号写上去，用户一眼就能发现“这不是我要核验的那个”。
+
+    失败不阻断：查不到就如实写“已不存在”，绝不让美化把卡片搞没。
+    """
+    try:
+        pond_id = int(payload.get("pond_id"))
+    except (TypeError, ValueError):
+        return {}
+    rows = tx.query_all("SELECT code, name FROM ponds WHERE id = %s", (pond_id,))
+    if not rows:
+        return {"target": f"id={pond_id}（该塘口已不存在）", "rows": {}}
+    row = rows[0]
+    text = f"{row['code']}（{row['name']}）"
+    return {"target": text, "rows": {"塘口": text, "塘口 ID": str(pond_id)}}
+
+
+__all__ = ["PondService", "confirmation_labels"]
