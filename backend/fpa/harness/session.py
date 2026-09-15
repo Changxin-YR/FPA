@@ -641,6 +641,7 @@ class HarnessSessionManager:
         gateway_url: str,
         context_token: str,
         on_notification: Any = None,
+        _retried: bool = False,
     ) -> HarnessTurn:
         """跑一轮对话。
 
@@ -735,6 +736,22 @@ class HarnessSessionManager:
             self.drop(session_key)
             if _is_session_log_broken(detail):
                 self._quarantine_session_log(session_id)
+                if not _retried:
+                    # 坏日志已经挪走，**立刻重试一次**——用户点一次就拿到答案，
+                    # 不需要"再发一句才好"。实测 2026-09-15：坏日志来自模型并发多工具调用
+                    # （callId 为空）；重试走的是刚刚建立的干净会话。
+                    # 只重试**一次**（`_retried`），不会无限循环。
+                    logger.warning("会话日志已损坏，已隔离并自动重试本轮：%s", session_id)
+                    return self.run(
+                        prompt,
+                        session_id=session_id,
+                        user_id=user_id,
+                        session_hash=session_hash,
+                        gateway_url=gateway_url,
+                        context_token=context_token,
+                        on_notification=on_notification,
+                        _retried=True,
+                    )
 
             raise DomainError(
                 ErrorCode.AGENT_UNAVAILABLE,
