@@ -174,7 +174,7 @@ CREATE TRIGGER audit_logs_no_delete BEFORE DELETE ON audit_logs FOR EACH ROW SIG
 ## 生产部署记录：`https://23331.cloud/yuxin/`
 
 > 2026-09-16 实际部署到 `root@1.14.148.15`（CentOS 7.6 / nginx 1.20.1 / MySQL 8.4 / Python 3.14.4）。
-> 老站点 `https://23331.cloud/fpa/`（上一代 FPA 部署）**未改动**，两者并行。
+> 上一代站点 `https://23331.cloud/fpa/`（现已 301 跳转到 `/yuxin/`）未改动，两者并行。
 
 | 项 | 值 |
 |---|---|
