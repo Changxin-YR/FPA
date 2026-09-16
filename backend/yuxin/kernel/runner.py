@@ -160,10 +160,13 @@ def _validate_query_values(spec: Capability, query: dict[str, Any]) -> None:
         if not allowed or value is None or value == "":
             continue
         if value not in allowed:
+            # 口径按 `docs/INTERFACES.md`：`VALIDATION_ERROR` 是「请求内容未通过 schema 校验」，
+            # 而「某个字段的取值非法」属于 `FIELD_INVALID`（`data.field` 给出字段名）。
+            # 早期版本这里报 VALIDATION_ERROR，与成本域 e2e 的期望（FIELD_INVALID）不一致。
             raise DomainError(
-                ErrorCode.VALIDATION_ERROR,
+                ErrorCode.FIELD_INVALID,
                 f"查询参数 {name} 的取值不在允许范围内",
-                data={"parameter": name, "allowed": list(allowed)},
+                data={"field": name, "allowed": list(allowed)},
             )
 
 
@@ -197,19 +200,34 @@ class CapabilityRunner:
 
         # 2. 校验请求体（校验模型与前端表单、Agent Tool schema 同源）
         raw = invocation.raw_payload if invocation.raw_payload is not None else invocation.payload
-        if spec.is_read:
-            cleaned: dict[str, Any] = {}
-            _validate_query_values(spec, invocation.query)
-        else:
-            cleaned = validate_payload(spec, raw, for_update=spec.kind == "update")
+        #: 校验失败时 `cleaned` 还不存在，失败审计只能记**原始入参**（只读能力记 query）。
+        audit_payload: dict[str, Any] = (
+            dict(invocation.query or {}) if spec.is_read else dict(raw or {})
+        )
+        try:
+            if spec.is_read:
+                cleaned: dict[str, Any] = {}
+                _validate_query_values(spec, invocation.query)
+            else:
+                cleaned = validate_payload(spec, raw, for_update=spec.kind == "update")
 
-        # 3. 人工专属
-        if spec.refuses_agent and actor.is_agent:
-            raise DomainError(
-                ErrorCode.HUMAN_ONLY,
-                "该操作只能由本人在系统页面完成，智能体不能代劳",
-                data={"capability": spec.name},
-            )
+            # 3. 人工专属
+            if spec.refuses_agent and actor.is_agent:
+                raise DomainError(
+                    ErrorCode.HUMAN_ONLY,
+                    "该操作只能由本人在系统页面完成，智能体不能代劳",
+                    data={"capability": spec.name},
+                )
+        except DomainError as error:
+            # 这一段发生在业务事务之前，`_invoke_once` / `_invoke_idempotent` 的失败审计
+            # 覆盖不到 —— 而「被校验挡下的调用」正是审计最该留痕的失败（`WRITE_CONTRACT`
+            # 规则 5 只规定了 success 的那一半）。补偿一条独立事务的失败审计后再重抛。
+            #
+            # 权限（FORBIDDEN）与数据范围（DATA_SCOPE_UNRESOLVED）的拒绝**不在**此列：
+            # 那两类是否入审计属于内核裁决范围，口径未定前不擅自扩大（见 `tools/cost_e2e.py`
+            # 对应注释与 `_audit_denied_or_pending`）。
+            self._audit_failure(spec, actor, request_id, audit_payload, error)
+            raise
 
         # 4. 权限与数据范围预检：失败时不能先签发确认卡。
         self._require_permission(spec, actor)
