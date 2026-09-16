@@ -162,3 +162,62 @@ CREATE TRIGGER audit_logs_no_delete BEFORE DELETE ON audit_logs FOR EACH ROW SIG
 老库建于 2026-09-15，此后迁移文件被编辑过（已用 `git show <改名前的 commit>` 逐个 A/B 证实，
 与本次重命名无关）。它不影响 `migrate.py apply` 与运行时；要彻底消除需重建库或重新登记
 `schema_migrations.checksum`。
+
+---
+
+## 生产部署记录：`https://23331.cloud/yuxin/`
+
+> 2026-09-16 实际部署到 `root@1.14.148.15`（CentOS 7.6 / nginx 1.20.1 / MySQL 8.4 / Python 3.14.4）。
+> 老站点 `https://23331.cloud/fpa/`（上一代 FPA 部署）**未改动**，两者并行。
+
+| 项 | 值 |
+|---|---|
+| 发布目录 | `/opt/adp/releases/yuxin-<时间戳>/`（含 `backend/`、`database/`、`tools/`、`frontend/dist/`） |
+| 生效指针 | `/opt/yuxin/current` → 发布目录（软链，回滚只改它） |
+| Python 环境 | 复用 `/opt/adp/login-registration/.venv`（Python 3.14.4，依赖版本与本仓 requirements 一致） |
+| 环境变量 | `/etc/yuxin/yuxin.env`（权限 600） |
+| 服务单元 | `yuxin.service`（gunicorn 2×2，`127.0.0.1:5004`，`yuxin.wsgi:app`）+ `yuxin.service.d/resources.conf`（内存/CPU 限额） |
+| 数据库 | MySQL `yuxin` 库 + `yuxin@localhost` / `yuxin@127.0.0.1` 账号（口令在 env 文件） |
+| nginx | `/etc/nginx/snippets/yuxin-location.conf`，由 `/etc/nginx/conf.d/23331.cloud.conf` include（原文件备份 `23331.cloud.conf.bak-yuxin`） |
+| 路径映射 | `/yuxin/` → 静态 dist；`/yuxin/api/` → 重写为 `/api/` 反代 5004；`/yuxin/healthz` 由 nginx 直接返回 200 |
+
+### 发布（增量）
+
+```powershell
+# 1) 本地：按子路径构建前端
+cd frontend; $env:VITE_PUBLIC_BASE_PATH='/yuxin/'; npx vite build --outDir dist-yuxin
+# 2) 打包（backend/ database/ tools/ + frontend/dist ← dist-yuxin）并上传
+tar -czf $env:TEMP\yuxin.tgz -C <stage> .
+scp -i $env:USERPROFILE\.ssh\adp_server_ed25519 $env:TEMP\yuxin.tgz root@1.14.148.15:/tmp/yuxin.tgz
+```
+
+```bash
+# 3) 服务器：解包 → 切软链 → 迁移 → 重启（nginx -t 通过才 reload）
+NEW=/opt/adp/releases/yuxin-$(date +%Y%m%d-%H%M%S)
+mkdir -p $NEW && tar -xzf /tmp/yuxin.tgz -C $NEW && rm -f /tmp/yuxin.tgz
+chown -R adp:adp $NEW
+chmod -R u=rwX,g=rX,o=rX $NEW        # ★ 必须给 o+rX，否则 nginx 读不到 → 首页 404
+ln -sfn $NEW /opt/yuxin/current.tmp && mv -Tf /opt/yuxin/current.tmp /opt/yuxin/current
+set -a; . /etc/yuxin/yuxin.env; set +a; cd /opt/yuxin/current
+/opt/adp/login-registration/.venv/bin/python tools/migrate.py apply
+systemctl restart yuxin && nginx -t && systemctl reload nginx
+```
+
+### 回滚
+
+```bash
+ln -sfn /opt/adp/releases/<上一个 release> /opt/yuxin/current.tmp \
+  && mv -Tf /opt/yuxin/current.tmp /opt/yuxin/current \
+  && systemctl restart yuxin
+```
+
+### 已知取舍
+
+- **智能体链路未接**：`AGENT_DSH_HOME=/opt/yuxin/dsh-home` 是空目录，AI 页面会提示暂不可用。
+  要接需在服务器上装 `@yuxin/dsh-biz-tools` 插件并配 `AGENT_HARNESS_ROOT` / `DSH_RUNTIME_MODE`
+  （服务器已有 `/opt/deepseek-harness-20260907` 与 `/opt/adp-agent-runtime-20260907`）。
+- **验收种子已写进生产库**：`tools/seed_acceptance.py` 造了 `demo` / `qa-maker` / `qa-checker`
+  与 8 个演示角色。演示完按提示摘掉：`DELETE FROM roles WHERE code LIKE 'yuxin-demo-%';`
+- 触发器由 `yuxin@localhost` 创建，DEFINER 与该账号一致，不会出现跨库 `1142 TRIGGER command denied`。
+- nginx 的 SPA 回落必须是 `try_files $uri /index.html =404;`——只写 `$uri =404` 会让
+  `/yuxin/auth/login` 这类深链接返回 nginx 404（实测踩到）。
