@@ -68,7 +68,7 @@ python tools\bootstrap_db.py                   # 幂等
 
 ```powershell
 $env:PYTHONPATH='<你的路径>\backend'
-$env:MYSQL_USER='fpa'; $env:MYSQL_PASSWORD='fpa_dev_password'; $env:MYSQL_DATABASE='fpa'
+$env:MYSQL_USER='yuxin'; $env:MYSQL_PASSWORD='yuxin_dev_password'; $env:MYSQL_DATABASE='yuxin'
 
 python tools\migrate.py apply        # 也可用 status / verify / reset（reset 仅开发环境）
 python tools\seed_permissions.py     # 从能力注册表派生权限码，幂等
@@ -123,14 +123,14 @@ npx playwright test
 ## 目录
 
 ```
-backend/fpa/kernel/        能力声明、字段、数据范围、事务、不变量、执行器、审计、金额口径
+backend/yuxin/kernel/        能力声明、字段、数据范围、事务、不变量、执行器、审计、金额口径
                            —— 派生规则的唯一来源
-backend/fpa/domains/       master_data / production / warehouse / purchase / sales / cost
+backend/yuxin/domains/       master_data / production / warehouse / purchase / sales / cost
                            ＋ access / identity / audit
-backend/fpa/web/           能力自动生成路由、鉴权、Agent 网关、响应信封
-backend/fpa/agent/         智能体网关（工具白名单 → 网关校验 → 业务服务二次校验，三层防御）
-backend/fpa/harness/       Harness 子进程池与环境隔离
-backend/fpa/bootstrap.py   组合根：按目录自动发现并装载每个域的 capabilities.py
+backend/yuxin/web/           能力自动生成路由、鉴权、Agent 网关、响应信封
+backend/yuxin/agent/         智能体网关（工具白名单 → 网关校验 → 业务服务二次校验，三层防御）
+backend/yuxin/harness/       Harness 子进程池与环境隔离
+backend/yuxin/bootstrap.py   组合根：按目录自动发现并装载每个域的 capabilities.py
 database/migrations/       000–012，纯 SQL、可重入
 frontend/src/layers/common/   元数据驱动的前端内核：DataTable / DynamicForm / ResourceListPage /
                               ListFilterBar / ResourceDetailPage / AgentPanel / meta.store

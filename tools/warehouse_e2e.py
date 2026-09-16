@@ -3,8 +3,8 @@
 用法::
 
     $env:MYSQL_ROOT_PASSWORD='1234'
-    $env:MYSQL_PASSWORD='fpa_dev_password'
-    $env:MYSQL_DATABASE='fpa_wh'
+    $env:MYSQL_PASSWORD='yuxin_dev_password'
+    $env:MYSQL_DATABASE='yuxin_wh'
     python tools/migrate.py apply     # 先建库建表
     python tools/warehouse_e2e.py
 
@@ -13,7 +13,7 @@
 入参纪律，以及**行锁的串行化**。
 
 并发那一段是本次最重要的产出：它在开发过程中**抓到了一个真实的负库存缺陷**
-（快照读 vs 锁定读，见 `backend/fpa/domains/warehouse/ledger.py::_lot_balance`
+（快照读 vs 锁定读，见 `backend/yuxin/domains/warehouse/ledger.py::_lot_balance`
 的注释与实测时间线）。单线程测试永远看不到它，所以它必须常驻。
 
 **能力层（声明式不变量真的在拦）不在这里**，那需要一个真实注册表，而
@@ -40,14 +40,14 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "backend"))
 
-from fpa.domains.warehouse.ledger import (  # noqa: E402
+from yuxin.domains.warehouse.ledger import (  # noqa: E402
     apply_movement,
     ledger_source_ref,
     resolve_issue_lot,
 )
-from fpa.kernel.errors import DomainError  # noqa: E402
-from fpa.kernel.scope import Scope, ScopeEntry, ScopeType  # noqa: E402
-from fpa.kernel.uow import ConnectionConfig, UnitOfWork  # noqa: E402
+from yuxin.kernel.errors import DomainError  # noqa: E402
+from yuxin.kernel.scope import Scope, ScopeEntry, ScopeType  # noqa: E402
+from yuxin.kernel.uow import ConnectionConfig, UnitOfWork  # noqa: E402
 
 D = lambda v: Decimal(str(v))  # noqa: E731
 
@@ -70,7 +70,7 @@ _LOT_SOON = ""
 _LOT_RACE = ""
 
 #: 这些 id 由 `_bootstrap()` 在运行时**按 code 解析**，不写死。
-#: 写死自增主键在共享库（`fpa`，已有各域的种子与探针数据）里必然失效——
+#: 写死自增主键在共享库（`yuxin`，已有各域的种子与探针数据）里必然失效——
 #: 别的域插一行就能让 `warehouse_id=1` 指向别的东西。
 WAREHOUSE = 0
 MATERIAL = 0
@@ -95,9 +95,9 @@ def config() -> ConnectionConfig:
     return ConnectionConfig(
         host=os.environ.get("MYSQL_HOST", "127.0.0.1"),
         port=int(os.environ.get("MYSQL_PORT", "3306")),
-        user=os.environ.get("MYSQL_USER", "fpa"),
-        password=os.environ.get("MYSQL_PASSWORD", "fpa_dev_password"),
-        database=os.environ.get("MYSQL_DATABASE", "fpa_wh"),
+        user=os.environ.get("MYSQL_USER", "yuxin"),
+        password=os.environ.get("MYSQL_PASSWORD", "yuxin_dev_password"),
+        database=os.environ.get("MYSQL_DATABASE", "yuxin_wh"),
         read_timeout=60,
         write_timeout=60,
     )
@@ -124,7 +124,7 @@ def _clean(tx, lot_no: str) -> None:
 def _bootstrap() -> None:
     """按 code 解析出本 e2e 要用的仓库 / 物料 / 操作者 id。
 
-    **不写死 id**：本仓已统一到共享库 `fpa`（ROLLOUT_CONTRACT §5），
+    **不写死 id**：本仓已统一到共享库 `yuxin`（ROLLOUT_CONTRACT §5），
     五个域的种子与探针数据都在里面，任何"id=1"的假设都会随别人的一次插入失效。
     这一段同时把"本域迁移的种子是否真的落库"变成一条断言。
     """

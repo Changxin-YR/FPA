@@ -8,8 +8,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "backend"))
 
-from fpa.kernel.uow import UnitOfWork  # noqa: E402
-from fpa.kernel.uow_factory import connection_config  # noqa: E402
+from yuxin.kernel.uow import UnitOfWork  # noqa: E402
+from yuxin.kernel.uow_factory import connection_config  # noqa: E402
 
 SAMPLES = (
     "batch.view", "batch.update", "batch.verify",

@@ -53,7 +53,7 @@ def _doc_exposure_claims() -> list[tuple[str, str]]:
 
 def test_文档里的_exposure_断言与运行时一致():
     load_all_status()
-    from fpa.kernel.capability import REGISTRY
+    from yuxin.kernel.capability import REGISTRY
 
     runtime = {
         c.name: (c.agent_exposure.value if hasattr(c.agent_exposure, "value")
@@ -92,7 +92,7 @@ def test_默认_hidden_当前一次都没生效这件事被文档记录():
     AI 可调用权，且没有任何判据会拦。钉住它，避免这层薄保护被当成"已生效"。
     """
     load_all_status()
-    from fpa.kernel.capability import REGISTRY
+    from yuxin.kernel.capability import REGISTRY
 
     values = [
         c.agent_exposure.value if hasattr(c.agent_exposure, "value") else str(c.agent_exposure)
@@ -146,7 +146,7 @@ def test_能力表的_confirmation_与_exposure_两列与运行时一致():
     会把 `None` 误判成"不匹配"。
     """
     load_all_status()
-    from fpa.kernel.capability import REGISTRY
+    from yuxin.kernel.capability import REGISTRY
 
     runtime = {c.name: c for c in REGISTRY.all()}
     checked = 0

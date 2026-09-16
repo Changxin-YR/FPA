@@ -5,13 +5,13 @@ import vue from '@vitejs/plugin-vue'
  * `base` 必须由 `VITE_PUBLIC_BASE_PATH` 驱动。
  *
  * 早期版本实测缺陷（.local/recon-frontend.md 问题 P-8）：`frontend/dist/index.html`
- * 引用 `/assets/index-BF8LSOQj.js`（根路径），而部署契约是 `/fpa/`
- * （`deploy/nginx-fpa-shared-location.conf:56`、`deploy/deploy.sh:108` 以
- * `VITE_PUBLIC_BASE_PATH=/fpa/` 构建）。照现状直接部署会白屏，而旧 CI 只跑
+ * 引用 `/assets/index-BF8LSOQj.js`（根路径），而部署契约是 `/yuxin/`
+ * （`deploy/nginx-yuxin-shared-location.conf:56`、`deploy/deploy.sh:108` 以
+ * `VITE_PUBLIC_BASE_PATH=/yuxin/` 构建）。照现状直接部署会白屏，而旧 CI 只跑
  * `npm run build`（默认 `base='/'`），永远不会发现。
  *
  * 这里把公开路径变成**显式、可断言的构建输入**：
- * 默认 `/`（本地开发），部署时由 `deploy/` 传 `/fpa/`。
+ * 默认 `/`（本地开发），部署时由 `deploy/` 传 `/yuxin/`。
  */
 const publicBasePath = process.env.VITE_PUBLIC_BASE_PATH ?? '/'
 

@@ -35,9 +35,9 @@ import re
 
 import pytest
 
-from fpa.factory import build_app
-from fpa.kernel.money import MONEY_QUANTUM, UNIT_PRICE_QUANTUM, money, unit_label
-from fpa.kernel.workflow import RESOURCES
+from yuxin.factory import build_app
+from yuxin.kernel.money import MONEY_QUANTUM, UNIT_PRICE_QUANTUM, money, unit_label
+from yuxin.kernel.workflow import RESOURCES
 
 _ISO_DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 _ISO_DATETIME = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}")
@@ -145,7 +145,7 @@ def test_currency_label_maps_cny_and_falls_back() -> None:
     实测缺陷：应付列表的「币种」列直接渲染 `CNY` —— 与 `unit = jin` 同族，
     根因是"有码、没有给人看的标签"。
     """
-    from fpa.kernel.money import currency_label
+    from yuxin.kernel.money import currency_label
 
     assert currency_label("CNY") == "人民币"
     assert currency_label("cny") == "人民币", "码大小写不该改变结果"

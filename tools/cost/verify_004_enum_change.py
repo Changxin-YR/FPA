@@ -1,6 +1,6 @@
 """在**临时库**里验证改写后的 004_cost.sql：能建起来、可重入、CHECK 真的拦得住。
 
-只碰 `fpa_cost_enum_probe` 这个临时库，用完即删，不碰 fpa。
+只碰 `yuxin_cost_enum_probe` 这个临时库，用完即删，不碰 yuxin。
 
 验证四件事：
   1. 000/001/003/004 能按序应用；
@@ -21,7 +21,7 @@ import pymysql  # noqa: E402
 
 from migrate import split_statements  # noqa: E402 - 复用 runner 的切分器（含 DELIMITER 处理）
 
-PROBE = "fpa_cost_enum_probe"
+PROBE = "yuxin_cost_enum_probe"
 ORDER = [
     "000_schema_migrations.sql",
     "001_identity_access_governance.sql",

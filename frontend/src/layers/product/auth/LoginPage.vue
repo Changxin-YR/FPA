@@ -76,7 +76,7 @@ async function submit(): Promise<void> {
     // 记住登录名：改密页在改密后要**自动用新密码重新登录**（服务端会作废旧会话），
     // 没有它就只能把用户退回登录页再输一遍账号。
     try {
-      sessionStorage.setItem('fpa:login-identifier', identifier.value.trim())
+      sessionStorage.setItem('yuxin:login-identifier', identifier.value.trim())
     } catch {
       // 隐私模式禁用 storage：不是致命问题，只是改密后要手输一次账号。
     }

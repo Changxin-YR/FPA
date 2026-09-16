@@ -19,7 +19,7 @@
 > （`frontend/vite.config.ts` 的 `server.proxy` 与 `tools/serve_dev.py`），改一个要改两个。
 
     cd <repo>
-    $env:MYSQL_USER='fpa'; $env:MYSQL_PASSWORD='fpa_dev_password'; $env:APP_ENV='development'
+    $env:MYSQL_USER='yuxin'; $env:MYSQL_PASSWORD='yuxin_dev_password'; $env:APP_ENV='development'
     $env:PYTHONPATH='<repo>\backend'
 
     # 后端：gunicorn 在 Windows 上不可用（依赖 fcntl），所以用 waitress 起同一个 app
@@ -39,7 +39,7 @@
 
     curl.exe -s -o NUL -w "%{http_code}" http://127.0.0.1:5101/api/v1/auth/me   # 未登录应返回 401
 
-`fpa` 包**未安装为 editable**，必须给 `PYTHONPATH=<repo>\backend`（`tools/` 下各脚本是在文件内注入 `sys.path` 的，
+`yuxin` 包**未安装为 editable**，必须给 `PYTHONPATH=<repo>\backend`（`tools/` 下各脚本是在文件内注入 `sys.path` 的，
 所以那些脚本不用设）。
 
 ---
@@ -50,7 +50,7 @@
 
 ```powershell
 cd <repo>
-$env:MYSQL_USER='fpa'; $env:MYSQL_PASSWORD='fpa_dev_password'
+$env:MYSQL_USER='yuxin'; $env:MYSQL_PASSWORD='yuxin_dev_password'
 
 # 后端 7 套自检（全绿才算健康）
 python tools\kernel_smoke.py          # 内核：能力声明/范围/事务/不变量/状态机
@@ -91,17 +91,17 @@ npx tsc --noEmit; npx vitest run    # 19 个测试
 ### 已落地的结构
 
 ```
-backend/fpa/kernel/       errors scope uow fields capability invariants
+backend/yuxin/kernel/       errors scope uow fields capability invariants
                           audit idempotency confirmation runner password workflow
                           invariants.py：18 种声明式规则类型，覆盖 registry §4 的
                           21 条业务规则（用法见 docs/INVARIANT_TYPES.md）
-backend/fpa/web/          app(能力自动生成路由) security(全局CSRF) routes_auth
+backend/yuxin/web/          app(能力自动生成路由) security(全局CSRF) routes_auth
                           routes_agent context workflow_meta
-backend/fpa/agent/        gateway（三层防御 + 固定业务路由）
-backend/fpa/harness/      session（子进程池 + 环境隔离）
-backend/fpa/domains/      _base access master_data
+backend/yuxin/agent/        gateway（三层防御 + 固定业务路由）
+backend/yuxin/harness/      session（子进程池 + 环境隔离）
+backend/yuxin/domains/      _base access master_data
 database/migrations/      000-003
-agent-runtime/            Harness 插件（@fpa/dsh-biz-tools）+ bin/run.cmd 启动器
+agent-runtime/            Harness 插件（@yuxin/dsh-biz-tools）+ bin/run.cmd 启动器
 docs/                     ARCHITECTURE INTERFACES DECISIONS WRITE_CONTRACT
                           CAPABILITY_REGISTRY（68 条能力权威清单，150KB）
                           INVARIANT_TYPES（不变量类型契约与用法）
@@ -208,7 +208,7 @@ PowerShell 在本环境**不可靠**，本会话造成过这些损伤：
 | `dsh_bin` 必须是可执行文件 | 指向 `run.cmd`（`.js` 报 WinError 193） |
 | SDK 的 `resolve_bundled_launch_args()` 读**父进程** `os.environ` | 给 `dsh_bin` 跳过它 |
 | 机器级环境变量对已启动进程不可见 | 从注册表读（见 `harness_smoke._machine_env`） |
-| 插件装在哪 | **`<DSH_HOME>/profiles/sdk/node_modules/@fpa/`**（不是运行时闭包） |
+| 插件装在哪 | **`<DSH_HOME>/profiles/sdk/node_modules/@yuxin/`**（不是运行时闭包） |
 | 插件装了 ≠ 会被加载 | **必须显式给 `patches=`**。合成顺序是 bundle → `<DSH_HOME>/profiles/sdk/cordis.patch.yml`（本仓库是**空数组**）→ `<DSH_HOME>/cordis.patch.yml`（不存在）→ `--patch` 覆盖层。前两层都不给，`patches=()` 就一条都不生效：模型**没有业务工具却留着 `tool-web`/`tool-fs`/`tool-pwsh`**，于是它自己拼 HTTP 打网关（业务数据是真的，路径绕过设计、安全边界整条不在），而应用启动、pytest、浏览器 e2e **全绿**。判据 `python tools/harness_tools_audit.py` |
 | 人格从哪来 | `system-prompt` 行的 `config.persona`（+ `includeHarnessIdentity: false`），写在同一个 patch 里。**别装 `@deepseek-ai/dsh-persona`**：那是仅限 agent preset 作用域的遮蔽行，挂全局会与 prompt 注册表冲突并加载失败 |
 
@@ -249,7 +249,7 @@ python tools\migrate.py apply|status|verify|reset
 3. **内核不 import flask / domains**；**MySQL 驱动只允许出现在 `kernel/uow.py` 一处**
    （错误码翻译与连接管理因而只有一个落点）；`web` 与 `agent` 不写 SQL。
    依赖方向由 `tests/test_architecture.py` 用 AST 强制，**且是集合相等而不是"禁止出现"**：
-   静态 import pymysql 的模块集合必须恰好是 `{fpa.kernel.uow}`——这比原措辞更强，
+   静态 import pymysql 的模块集合必须恰好是 `{yuxin.kernel.uow}`——这比原措辞更强，
    它同时禁止"再来一处接驱动"。
    > 原措辞"内核不 import flask / pymysql / domains"与实际实现相矛盾（`UnitOfWork` 就是
    > 事务边界、必须持有连接），且它描述的是一条**从未成立过**的约束。按本项目纪律

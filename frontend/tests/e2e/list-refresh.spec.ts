@@ -28,7 +28,7 @@ test('列表重新拉取时必须看到新写入的行（不被 HTTP 缓存回�
     const csrf =
       document.cookie
         .split('; ')
-        .find((x) => x.startsWith('fpa_csrf='))
+        .find((x) => x.startsWith('yuxin_csrf='))
         ?.split('=')[1] ?? ''
     const res = await fetch('/api/v1/partners', {
       method: 'POST',

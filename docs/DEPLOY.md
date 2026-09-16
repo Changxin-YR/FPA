@@ -12,8 +12,8 @@ cd <repo>
 
 # 后端 5101（**必须带齐这些 env，漏一个就静默失败**）
 $env:PYTHONPATH='<repo>\backend'
-$env:MYSQL_USER='fpa'; $env:MYSQL_PASSWORD='fpa_dev_password'
-$env:MYSQL_DATABASE='fpa'; $env:PORT='5101'; $env:APP_ENV='development'
+$env:MYSQL_USER='yuxin'; $env:MYSQL_PASSWORD='yuxin_dev_password'
+$env:MYSQL_DATABASE='yuxin'; $env:PORT='5101'; $env:APP_ENV='development'
 $env:AGENT_DSH_HOME='<repo>\.dsh-home'
 $env:AGENT_HARNESS_ROOT='<harness-runtime>'
 $env:AGENT_DSH_BIN='<repo>\agent-runtime\bin\run.cmd'
@@ -27,14 +27,14 @@ cd frontend; npm run dev
 浏览器 <http://127.0.0.1:5273/>，账号 `demo` / `Demo1234!`。
 
 **改过 Agent 插件（`agent-runtime/`）后必须重建 + 重装**：Harness 加载的是
-`<DSH_HOME>/profiles/sdk/node_modules/@fpa/dsh-biz-tools/` 的**副本**，不是 `agent-runtime/src`——
+`<DSH_HOME>/profiles/sdk/node_modules/@yuxin/dsh-biz-tools/` 的**副本**，不是 `agent-runtime/src`——
 只跑 `tsc` 不会生效（实测踩过：改了 `ask_user` 描述，模型行为没变）。
 
 ```powershell
 cd agent-runtime; npm run build; cd ..
 python tools\live_agent_e2e.py      # 第 5 步重建/重装插件，并跑一遍真模型闭环
 # 或手动：把 agent-runtime\lib\* 与 package.json 复制到
-#   <DSH_HOME>\profiles\sdk\node_modules\@fpa\dsh-biz-tools\
+#   <DSH_HOME>\profiles\sdk\node_modules\@yuxin\dsh-biz-tools\
 # 然后**重启后端**（Harness 会话按会话池存活，不重启会继续用旧插件）。
 ```
 
@@ -56,8 +56,8 @@ python -m pip install -r backend\requirements.txt      # Flask / PyMySQL / waitr
 
 | 依赖 | 说明 |
 |---|---|
-| Python **3.14** | `fpa` **未安装为 editable**，必须给 `PYTHONPATH=<repo>\backend` |
-| MySQL **9.7** @ `127.0.0.1:3306` | 库 `fpa`，账号 `fpa` / `fpa_dev_password` |
+| Python **3.14** | `yuxin` **未安装为 editable**，必须给 `PYTHONPATH=<repo>\backend` |
+| MySQL **9.7** @ `127.0.0.1:3306` | 库 `yuxin`，账号 `yuxin` / `yuxin_dev_password` |
 | Node | 前端开发服务器；`frontend/node_modules` 已就位（`npm ci` 可重建） |
 | **`waitress`** | 实际的 WSGI 服务器。**Windows 上 gunicorn 不可用**（依赖 `fcntl`），所以 requirements 里同时列着 gunicorn 与 waitress，生产按平台二选一 |
 | **`deepseek-harness-sdk`** | 由**本地运行时 wheel** 提供（dev 环境是 editable 版）；根目录在 `AGENT_HARNESS_ROOT` |
@@ -73,7 +73,7 @@ python tools\migrate.py reset          # ★ 仅开发环境（APP_ENV=productio
 python tools\seed_permissions.py --demo-role  # 派生权限码 + 验收演示角色
 python tools\seed_acceptance.py        # 业务角色 / 数据范围 / demo+qa 账号（重置后必跑）
 # 业务数据（P-*/PO-2026-* 数据集）：
-#   mysql -u root -p fpa < database\test_data.sql
+#   mysql -u root -p yuxin < database\test_data.sql
 python tools\schema_parity.py          # 真库形状 vs 迁移文件（migrate verify 的盲区）
 ```
 

@@ -4,7 +4,7 @@
 
 三件可验证的事，不是"代码没报错"：
 
-1. **能力真的被装载了。** 注册表来自 `fpa.bootstrap.load_all()`（生产路径的组合根），
+1. **能力真的被装载了。** 注册表来自 `yuxin.bootstrap.load_all()`（生产路径的组合根），
    不是本文件手搓的夹具。`DEVELOPMENT.md` §4 记过这个坑：能力声明无人 import 时，
    七套自检全绿而真实 HTTP 路径上那条能力根本不存在（404）。
 
@@ -13,11 +13,11 @@
    （`docs/WRITE_CONTRACT.md` 规则 2 / `ARCHITECTURE.md`）。
 
 3. **回读函数不靠夹具补挂。** 这是本文件存在的**首要理由**（`ROLLOUT_CONTRACT.md` §3）：
-   `tools/{runner,web,agent}_e2e.py` 各自在夹具里手写 `PondService.create.__fpa_load_by_id__ = ...`，
+   `tools/{runner,web,agent}_e2e.py` 各自在夹具里手写 `PondService.create.__yuxin_load_by_id__ = ...`，
    于是"真实域声明没有回读函数"这个缺陷被夹具**盖住**了——生产路径上
    `kernel/runner.py::_reload_after` 会抛 `INTERNAL_ERROR`（500），而七套自检全绿。
    本文件用 `bootstrap.load_all()` 的真实注册表调用真实能力，因此那条路径上的
-   任何一个 `__fpa_load_by_id__` 缺口都会在这里变成 FAIL。
+   任何一个 `__yuxin_load_by_id__` 缺口都会在这里变成 FAIL。
 
 ## 与夹具的刻意差别
 
@@ -44,8 +44,8 @@
 
 用法::
 
-    # §5：统一用默认库 fpa（不要一域一库）。MYSQL_DATABASE 不设就是 fpa。
-    $env:MYSQL_USER='fpa'; $env:MYSQL_PASSWORD='fpa_dev_password'
+    # §5：统一用默认库 yuxin（不要一域一库）。MYSQL_DATABASE 不设就是 yuxin。
+    $env:MYSQL_USER='yuxin'; $env:MYSQL_PASSWORD='yuxin_dev_password'
     python tools\\master_data_e2e.py
 """
 
@@ -60,18 +60,18 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
 
 import pymysql  # noqa: E402
 
-from fpa.bootstrap import load_all  # noqa: E402
-from fpa.kernel.audit import AuditWriter  # noqa: E402
-from fpa.kernel.errors import DomainError  # noqa: E402
-from fpa.kernel.idempotency import IdempotencyStore  # noqa: E402
-from fpa.kernel.runner import ActorView, CapabilityRunner, Invocation  # noqa: E402
-from fpa.kernel.scope import Scope  # noqa: E402
-from fpa.kernel.uow import ConnectionConfig, UnitOfWork  # noqa: E402
+from yuxin.bootstrap import load_all  # noqa: E402
+from yuxin.kernel.audit import AuditWriter  # noqa: E402
+from yuxin.kernel.errors import DomainError  # noqa: E402
+from yuxin.kernel.idempotency import IdempotencyStore  # noqa: E402
+from yuxin.kernel.runner import ActorView, CapabilityRunner, Invocation  # noqa: E402
+from yuxin.kernel.scope import Scope  # noqa: E402
+from yuxin.kernel.uow import ConnectionConfig, UnitOfWork  # noqa: E402
 
 FAILURES = 0
 
 #: 探针数据前缀。用它计数与清理，**绝不清全表**——脚本可能跑在共享开发库上
-#: （`ROLLOUT_CONTRACT.md` §5：统一用默认库 `fpa`，并发 e2e 靠探针 + 清理隔离）。
+#: （`ROLLOUT_CONTRACT.md` §5：统一用默认库 `yuxin`，并发 e2e 靠探针 + 清理隔离）。
 PROBE_PREFIX = "MD-E2E-"
 
 #: 本次运行的唯一标记。只用于**对账用的 request_id**。
@@ -176,9 +176,9 @@ def config() -> ConnectionConfig:
     return ConnectionConfig(
         host=os.environ.get("MYSQL_HOST", "127.0.0.1"),
         port=int(os.environ.get("MYSQL_PORT", "3306")),
-        user=os.environ.get("MYSQL_USER", "fpa"),
+        user=os.environ.get("MYSQL_USER", "yuxin"),
         password=os.environ.get("MYSQL_PASSWORD", ""),
-        database=os.environ.get("MYSQL_DATABASE", "fpa"),
+        database=os.environ.get("MYSQL_DATABASE", "yuxin"),
     )
 
 
@@ -200,7 +200,7 @@ class PersonaScopeResolver:
     """按 user_id 返回数据范围的替身（实现 `kernel.runner.ScopeResolver` 协议）。
 
     `_make_scope_resolver()` 的说明解释了**为什么本测试必须用替身**而不是
-    `fpa.domains.access.scope_resolver.DataScopeResolver`。
+    `yuxin.domains.access.scope_resolver.DataScopeResolver`。
     """
 
     def __init__(self, mapping: dict[int, list[dict]]) -> None:
@@ -370,7 +370,7 @@ def count_audit_for_request(request_id: str, capability: str) -> int:
     """**本文件自己生成的** request_id 对应的审计条数。
 
     为什么不用"全库计数增量"：审计表是全局 append-only，别的域的 e2e 并发写入会让
-    "新增恰好 1 条"假失败（在共享库 `fpa` 上实测到 `20 -> 22`）。
+    "新增恰好 1 条"假失败（在共享库 `yuxin` 上实测到 `20 -> 22`）。
     §5 的口径是"靠探针数据与清理隔离，不靠分库"，所以断言必须按自己的请求号精确对账。
     """
     with uow_factory().begin() as tx:
@@ -438,8 +438,8 @@ def load_registry() -> tuple[object, bool]:
         print("           —— 这只说明组合根装载没被验证，不代表本域有问题；原因在别的域。")
         import importlib
 
-        importlib.import_module("fpa.domains.master_data.capabilities")
-        from fpa.kernel.capability import REGISTRY
+        importlib.import_module("yuxin.domains.master_data.capabilities")
+        from yuxin.kernel.capability import REGISTRY
 
         return REGISTRY, False
 
@@ -472,18 +472,18 @@ def main() -> int:  # noqa: C901 - 一个顺序检查清单，拆开会让"哪�
     unwired: list[str] = []
     for name in WRITE_CAPABILITIES:
         spec = registry.get(name)
-        loader = getattr(spec.handler, "__fpa_load_by_id__", None)
+        loader = getattr(spec.handler, "__yuxin_load_by_id__", None)
         if not callable(loader):
             unwired.append(name)
     check(
-        "写能力都声明了 __fpa_load_by_id__（执行器 _reload_after 依赖它）",
+        "写能力都声明了 __yuxin_load_by_id__（执行器 _reload_after 依赖它）",
         not unwired,
         f"缺回读函数：{unwired}",
     )
 
     # 域自己的守卫：**注册表里的写能力**必须全部有回读函数。
     # 它在 import 期已经跑过一次，这里显式再跑一次是为了让 e2e 的输出里有这条证据。
-    from fpa.domains.master_data.capabilities import assert_reload_wired  # noqa: E402
+    from yuxin.domains.master_data.capabilities import assert_reload_wired  # noqa: E402
 
     try:
         assert_reload_wired()
@@ -494,7 +494,7 @@ def main() -> int:  # noqa: C901 - 一个顺序检查清单，拆开会让"哪�
     # 1d. 回读函数的签名必须能被 `runner._resolve(...)(tx, scope=..., record_id=...)` 调用。
     for name in WRITE_CAPABILITIES:
         spec = registry.get(name)
-        loader = getattr(spec.handler, "__fpa_load_by_id__", None)
+        loader = getattr(spec.handler, "__yuxin_load_by_id__", None)
         if loader is None:
             continue
         bound = getattr(spec.service_factory(), loader.__name__) if spec.service_factory else loader
@@ -856,8 +856,8 @@ def main() -> int:  # noqa: C901 - 一个顺序检查清单，拆开会让"哪�
     #   `StateTransition` **形态二**判定，而该形态要求服务经 `_invariant_context`
     #   回传迁移两端。下面三条是同一件事的三个可核查侧面 —— 缺任一半，
     #   `check()` 会抛 `INTERNAL_ERROR`（上面那次核验就不会是 executed）。
-    from fpa.kernel.capability import REGISTRY as _REG  # noqa: E402
-    from fpa.kernel.invariants import StateTransition as _ST  # noqa: E402
+    from yuxin.kernel.capability import REGISTRY as _REG  # noqa: E402
+    from yuxin.kernel.invariants import StateTransition as _ST  # noqa: E402
 
     _verify_cap = _REG.find("pond_status_change.verify")
     _transition_decls = [inv for inv in _verify_cap.invariants if isinstance(inv, _ST)]
@@ -1082,7 +1082,7 @@ def main() -> int:  # noqa: C901 - 一个顺序检查清单，拆开会让"哪�
 
     print("\n=== 12. 未绑定回读函数时会怎样（反证：没有回读 = 500，不会静默成功） ===")
     # 直接验证执行器的行为，证明"回读函数缺失"不是软失败：
-    # 拿一条真的能力，把它的 handler 换成一个没有 __fpa_load_by_id__ 的等价函数。
+    # 拿一条真的能力，把它的 handler 换成一个没有 __yuxin_load_by_id__ 的等价函数。
     # 关键：**不能**去改真实注册表里那条 spec（`Capability` 是 frozen dataclass，
     # 改它会污染真实装配）。做法是造一个只含"有缺口的那一条能力"的临时注册表：
     #
@@ -1093,8 +1093,8 @@ def main() -> int:  # noqa: C901 - 一个顺序检查清单，拆开会让"哪�
     # 是真实会发生的笔误（写错方法名），执行器必须响亮地失败而不是静默降级。
     import dataclasses
 
-    from fpa.kernel.capability import Registry  # noqa: E402
-    from fpa.kernel.workflow import RESOURCES  # noqa: E402
+    from yuxin.kernel.capability import Registry  # noqa: E402
+    from yuxin.kernel.workflow import RESOURCES  # noqa: E402
 
     real_spec = load_all().get("pond.create")
     denuded_registry = Registry()
@@ -1135,8 +1135,8 @@ def main() -> int:  # noqa: C901 - 一个顺序检查清单，拆开会让"哪�
     print("\n=== 13. 跨域具名只读入口（ROLLOUT_CONTRACT §2.0 的表所有者义务）===")
     # §2.0：调用方不得直读别人的表；表所有者必须提供具名只读函数（单行 + 批量）。
     # 实测有**五个域**在读主数据的四张表，所以这些入口是本域的对外契约，必须像能力一样被测。
-    from fpa.domains.master_data import lookup as md_lookup  # noqa: E402
-    from fpa.domains.master_data import service as md_service  # noqa: E402
+    from yuxin.domains.master_data import lookup as md_lookup  # noqa: E402
+    from yuxin.domains.master_data import service as md_service  # noqa: E402
 
     single_names = ("lookup_pond", "lookup_area", "lookup_material", "lookup_partner")
     batch_names = ("lookup_ponds", "lookup_areas", "lookup_materials", "lookup_partners")

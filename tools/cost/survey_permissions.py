@@ -29,7 +29,7 @@ def show_queries(path: pathlib.Path, needles: tuple[str, ...]) -> None:
 
 
 def main() -> int:
-    access = ROOT / "backend" / "fpa" / "domains" / "access" / "service.py"
+    access = ROOT / "backend" / "yuxin" / "domains" / "access" / "service.py"
     show_queries(access, ("permissions", "role_permissions", "user_roles"))
 
     text = access.read_text(encoding="utf-8")
@@ -43,8 +43,8 @@ def main() -> int:
     print("=== 注册表里 required_permission 的分布 ===")
     import importlib
 
-    from fpa.bootstrap import _module_name, discover_domains
-    from fpa.kernel.capability import REGISTRY
+    from yuxin.bootstrap import _module_name, discover_domains
+    from yuxin.kernel.capability import REGISTRY
 
     for domain in discover_domains():
         try:

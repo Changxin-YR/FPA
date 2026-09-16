@@ -110,11 +110,11 @@ RESOURCES.register(
 
 ### 6.2 落点（**唯一**）
 
-    backend/fpa/kernel/workflow.py::ACTION_LABELS    ← 中文标签的唯一定义
+    backend/yuxin/kernel/workflow.py::ACTION_LABELS    ← 中文标签的唯一定义
                                        row_action_label(action)   ← 单值查表（未登记回退原词）
                                        row_action_options()       ← 取值 + 标签
 
-    → backend/fpa/web/workflow_meta.py::actions_payload()
+    → backend/yuxin/web/workflow_meta.py::actions_payload()
     → GET /api/v1/meta/capabilities 的 data.actions.{row_actions, row_action_labels}
     → 前端 frontend/src/layers/common/meta/meta.store.ts::rowActionLabel()
     → DataTable.vue / RecordActions.vue 只渲染，不翻译

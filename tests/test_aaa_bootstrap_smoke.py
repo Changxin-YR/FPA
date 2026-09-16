@@ -2,7 +2,7 @@
 
 ## 为什么需要它（负责人 采纳 复核人 的建议）
 组合根是"按目录自动发现每个域的 `capabilities.py` 并 import"。所以**任何一个域语法错 /
-import 失败**，都会让 `fpa.bootstrap.load_all()` 整体装不起来，于是所有依赖组合根的
+import 失败**，都会让 `yuxin.bootstrap.load_all()` 整体装不起来，于是所有依赖组合根的
 断言（架构约束、注册表对账、读回契约、行内动作……）一次性全红。实测过一次：
 **1 条真故障膨胀成 22 failed / 94 passed** —— 真问题被噪声淹没。
 
@@ -21,7 +21,7 @@ from __future__ import annotations
 import sys
 from typing import Any
 
-_BOOTSTRAP_STATE = "fpa_test_bootstrap_state"
+_BOOTSTRAP_STATE = "yuxin_test_bootstrap_state"
 
 
 class BootstrapState:
@@ -58,8 +58,8 @@ def attempt_load() -> BootstrapState:
     state = bootstrap_state()
     if state.attempted:
         return state
-    import fpa.bootstrap as bootstrap
-    from fpa.kernel.capability import REGISTRY
+    import yuxin.bootstrap as bootstrap
+    from yuxin.kernel.capability import REGISTRY
 
     state.attempted = True
     try:
@@ -94,8 +94,8 @@ def test_all_domains_import() -> None:
 
 def test_bootstrap_load_is_idempotent() -> None:
     """重复装载必须安全（组合根被多个入口调用：web / agent / 自检工具）。"""
-    import fpa.bootstrap as bootstrap
-    from fpa.kernel.capability import REGISTRY
+    import yuxin.bootstrap as bootstrap
+    from yuxin.kernel.capability import REGISTRY
 
     state = attempt_load()
     if state.error is not None:

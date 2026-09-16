@@ -19,8 +19,8 @@ sys.path.insert(0, str(ROOT / "backend"))
 def main() -> int:
     import importlib
 
-    from fpa.bootstrap import _module_name, discover_domains
-    from fpa.kernel.capability import REGISTRY
+    from yuxin.bootstrap import _module_name, discover_domains
+    from yuxin.kernel.capability import REGISTRY
 
     for domain in discover_domains():
         try:

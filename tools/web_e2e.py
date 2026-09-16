@@ -36,8 +36,8 @@
 | 文件 | 注册表 | 证明什么 |
 |---|---|---|
 | 本文件 | 夹具（1 条能力 + `selftest_ponds`） | HTTP 全链路、安全边界（最小可复现） |
-| `tools/master_data_e2e.py` | `fpa.bootstrap.load_all()` | 真实能力集的行为（权限/范围/不变量/回读），不经模型 |
-| `tools/live_agent_e2e.py` | `fpa.bootstrap.load_all()` | **模型**能否触达真实能力集并写进业务表 `ponds` |
+| `tools/master_data_e2e.py` | `yuxin.bootstrap.load_all()` | 真实能力集的行为（权限/范围/不变量/回读），不经模型 |
+| `tools/live_agent_e2e.py` | `yuxin.bootstrap.load_all()` | **模型**能否触达真实能力集并写进业务表 `ponds` |
 
 历史教训（`DEVELOPMENT.md` §4 那条纪律的第三次出现）：`live_agent_e2e.py` 曾经把**本文件的
 `build_registry()` 当作能力来源**，于是"闭环证明"里的注册表是夹具——它证明的是
@@ -60,18 +60,18 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
 
 import pymysql  # noqa: E402
 
-from fpa.agent.gateway import AgentToolGateway  # noqa: E402
-from fpa.domains.access.scope_resolver import DataScopeResolver  # noqa: E402
-from fpa.domains.access.service import AccessService  # noqa: E402
-from fpa.kernel import capability as cap  # noqa: E402
-from fpa.kernel.audit import AuditWriter  # noqa: E402
-from fpa.kernel.confirmation import ConfirmationGate, ConfirmationStore  # noqa: E402
-from fpa.kernel.fields import f_num, f_str  # noqa: E402
-from fpa.kernel.idempotency import IdempotencyStore  # noqa: E402
-from fpa.kernel.password import hash_password  # noqa: E402
-from fpa.kernel.runner import CapabilityRunner  # noqa: E402
-from fpa.kernel.uow import ConnectionConfig, UnitOfWork  # noqa: E402
-from fpa.kernel.workflow import (  # noqa: E402
+from yuxin.agent.gateway import AgentToolGateway  # noqa: E402
+from yuxin.domains.access.scope_resolver import DataScopeResolver  # noqa: E402
+from yuxin.domains.access.service import AccessService  # noqa: E402
+from yuxin.kernel import capability as cap  # noqa: E402
+from yuxin.kernel.audit import AuditWriter  # noqa: E402
+from yuxin.kernel.confirmation import ConfirmationGate, ConfirmationStore  # noqa: E402
+from yuxin.kernel.fields import f_num, f_str  # noqa: E402
+from yuxin.kernel.idempotency import IdempotencyStore  # noqa: E402
+from yuxin.kernel.password import hash_password  # noqa: E402
+from yuxin.kernel.runner import CapabilityRunner  # noqa: E402
+from yuxin.kernel.uow import ConnectionConfig, UnitOfWork  # noqa: E402
+from yuxin.kernel.workflow import (  # noqa: E402
     RESOURCES,
     RowAction,
     State,
@@ -79,9 +79,9 @@ from fpa.kernel.workflow import (  # noqa: E402
     Transition,
     Workflow,
 )
-from fpa.kernel.workflow import resource as declare_resource  # noqa: E402
-from fpa.settings import Settings  # noqa: E402
-from fpa.web.app import create_app  # noqa: E402
+from yuxin.kernel.workflow import resource as declare_resource  # noqa: E402
+from yuxin.settings import Settings  # noqa: E402
+from yuxin.web.app import create_app  # noqa: E402
 
 FAILURES = 0
 
@@ -99,9 +99,9 @@ def config() -> ConnectionConfig:
     return ConnectionConfig(
         host=os.environ.get("MYSQL_HOST", "127.0.0.1"),
         port=int(os.environ.get("MYSQL_PORT", "3306")),
-        user=os.environ.get("MYSQL_USER", "fpa"),
+        user=os.environ.get("MYSQL_USER", "yuxin"),
         password=os.environ.get("MYSQL_PASSWORD", ""),
-        database=os.environ.get("MYSQL_DATABASE", "fpa"),
+        database=os.environ.get("MYSQL_DATABASE", "yuxin"),
     )
 
 
@@ -153,7 +153,7 @@ class PondService:
         )
 
 
-PondService.create.__fpa_load_by_id__ = PondService.load  # type: ignore[attr-defined]
+PondService.create.__yuxin_load_by_id__ = PondService.load  # type: ignore[attr-defined]
 
 
 def build_registry() -> cap.Registry:
@@ -332,7 +332,7 @@ def main() -> int:
         scope_resolver=DataScopeResolver(uow_factory),
         secret_key=settings.secret_key,
     )
-    app.config["FPA_AGENT_GATEWAY"] = gateway
+    app.config["YUXIN_AGENT_GATEWAY"] = gateway
     app.config["TESTING"] = True
     client = app.test_client()
 
@@ -371,8 +371,8 @@ def main() -> int:
     check("返回角色", isinstance(user.get("roles"), list), str(user.get("roles")))
     check("`status` 是复合口径", user.get("status") in {"active", "must_change_password", "pending", "disabled"}, str(user.get("status")))
 
-    session_cookie = client.get_cookie("fpa_session")
-    csrf_cookie = client.get_cookie("fpa_csrf")
+    session_cookie = client.get_cookie("yuxin_session")
+    csrf_cookie = client.get_cookie("yuxin_csrf")
     check("设置了会话 Cookie", session_cookie is not None)
     check("会话 Cookie 是 HttpOnly", bool(session_cookie and session_cookie.http_only) if hasattr(session_cookie, "http_only") else True)
     check("设置了 CSRF Cookie", csrf_cookie is not None)

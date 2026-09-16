@@ -2,13 +2,13 @@
 
 ## 要证明的三件事
 
-`fpa.bootstrap` 补齐后，"能力声明"有了装载处；本工具证明**装配处**也补齐了：
+`yuxin.bootstrap` 补齐后，"能力声明"有了装载处；本工具证明**装配处**也补齐了：
 
-1. `fpa.factory.build_app()`（`registry=None`）会自己去组合根装载 → 无需任何夹具；
+1. `yuxin.factory.build_app()`（`registry=None`）会自己去组合根装载 → 无需任何夹具；
 2. 组合根装载出的**每一条能力都在 Flask 路由表里有对应规则**（URL 由能力声明派生）；
 3. 这些路由来自**域声明**而不是测试夹具 —— 判据有两条，都朝向"夹具不可能满足"：
    * 路由数量与组合根注册表一致，而夹具注册表只有 1 条能力；
-   * 抽样的能力处理器的 `__module__` 落在 `fpa.domains.*`。
+   * 抽样的能力处理器的 `__module__` 落在 `yuxin.domains.*`。
 
 第 3 条是必要的：`tools/web_e2e.py` 的夹具能让"路由存在"这类断言变绿，而真实进程里
 域能力仍然不存在（这正是 `bootstrap.py` 指认的那类静默失败）。
@@ -28,8 +28,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "backend"))
 
-from fpa.factory import build_app, registry_from_composition_root  # noqa: E402
-from fpa.settings import Settings  # noqa: E402
+from yuxin.factory import build_app, registry_from_composition_root  # noqa: E402
+from yuxin.settings import Settings  # noqa: E402
 
 FAILURES = 0
 
@@ -76,16 +76,16 @@ def main() -> int:
     check("build_app() 在 registry=None 时装配成功", app is not None)
     check(
         "app 里挂的就是组合根那一份注册表",
-        app.config.get("FPA_REGISTRY") is registry,
+        app.config.get("YUXIN_REGISTRY") is registry,
     )
-    check("Agent 网关已接线（不需要调用方记得赋值）", app.config.get("FPA_AGENT_GATEWAY") is not None)
+    check("Agent 网关已接线（不需要调用方记得赋值）", app.config.get("YUXIN_AGENT_GATEWAY") is not None)
 
     print("\n=== 2. 每条能力都有对应的 Flask 路由 ===")
     routes = route_index(app)
     # 路径模板要按 app.py 的同一条规则转换：`{pond_id}` -> `<int:pond_id>`。
     # 直接拿能力声明的原始 path 去比会得到一堆"缺失"，而它们其实都注册了——
     # 那正是"用错口径产生的假失败"，先修口径再谈结论。
-    from fpa.web.app import _flask_path
+    from yuxin.web.app import _flask_path
 
     missing = [
         f"{cap.method} {cap.path}"
@@ -112,21 +112,21 @@ def main() -> int:
         module = str(getattr(cap.handler, "__module__", ""))
         domains_module.append((name, module))
     check(
-        "抽样能力的处理器来自 fpa.domains.*",
-        bool(domains_module) and all(module.startswith("fpa.domains.") for _, module in domains_module),
+        "抽样能力的处理器来自 yuxin.domains.*",
+        bool(domains_module) and all(module.startswith("yuxin.domains.") for _, module in domains_module),
         str(domains_module),
     )
     for name, module in domains_module:
         print(f"      {name:22} <- {module}")
 
     print("\n=== 4. 夹具路径未被破坏（显式传 registry 仍然生效）===")
-    from fpa.kernel.capability import Registry
+    from yuxin.kernel.capability import Registry
 
     tiny = Registry()
     fixture_app = build_app(registry=tiny, settings=Settings.from_env({"APP_ENV": "test", "SECRET_KEY": "x"}))
     fixture_routes = route_index(fixture_app)
     check("显式传入的空注册表 => 没有能力路由", len(fixture_routes) < len(routes))
-    check("夹具 app 与真 app 是两份不同配置", fixture_app.config["FPA_REGISTRY"] is tiny)
+    check("夹具 app 与真 app 是两份不同配置", fixture_app.config["YUXIN_REGISTRY"] is tiny)
 
     print()
     if FAILURES:

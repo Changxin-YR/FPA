@@ -44,8 +44,8 @@ from __future__ import annotations
 
 import pytest
 
-from fpa.agent.gateway import AgentToolGateway
-from fpa.kernel.capability import (
+from yuxin.agent.gateway import AgentToolGateway
+from yuxin.kernel.capability import (
     AgentExposure,
     Capability,
     Confirmation,
@@ -55,8 +55,8 @@ from fpa.kernel.capability import (
     Registry,
     Risk,
 )
-from fpa.kernel.errors import DomainError, ErrorCode
-from fpa.kernel.runner import ActorView, CapabilityRunner, Invocation, InvocationResult
+from yuxin.kernel.errors import DomainError, ErrorCode
+from yuxin.kernel.runner import ActorView, CapabilityRunner, Invocation, InvocationResult
 
 # ---------------------------------------------------------------------------
 # 夹具：与那 3 条真实能力**同形**的合成能力

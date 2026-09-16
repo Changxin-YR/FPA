@@ -24,7 +24,7 @@ from conftest import load_all_status
 
 def test_资源列标签不得重复():
     load_all_status()
-    from fpa.kernel.workflow import RESOURCES
+    from yuxin.kernel.workflow import RESOURCES
 
     resources = RESOURCES.all() if hasattr(RESOURCES, "all") else list(RESOURCES)
     # 空集不得当成通过

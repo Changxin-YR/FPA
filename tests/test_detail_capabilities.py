@@ -36,7 +36,7 @@ from typing import Any
 import pytest
 
 from conftest import load_all_status
-from fpa.kernel.scope import Scope
+from yuxin.kernel.scope import Scope
 
 DETAILS: dict[str, dict[str, str]] = {
     "pond.get": {
@@ -44,7 +44,7 @@ DETAILS: dict[str, dict[str, str]] = {
         "path": "/api/v1/ponds/{pond_id}",
         "permission": "pond.view",
         "table": "ponds",
-        "handler_path": "fpa.domains.master_data.ponds:PondService.get_pond_by_id",
+        "handler_path": "yuxin.domains.master_data.ponds:PondService.get_pond_by_id",
         "path_param": "pond_id",
         "available_transitions": True,
     },
@@ -53,7 +53,7 @@ DETAILS: dict[str, dict[str, str]] = {
         "path": "/api/v1/purchase-orders/{order_id}",
         "permission": "purchase.view",
         "table": "purchase_orders",
-        "handler_path": "fpa.domains.purchase.orders:PurchaseOrderService.get_order_by_id",
+        "handler_path": "yuxin.domains.purchase.orders:PurchaseOrderService.get_order_by_id",
         "available_transitions": True,
     },
     "sales_order.get": {
@@ -61,7 +61,7 @@ DETAILS: dict[str, dict[str, str]] = {
         "path": "/api/v1/sales-orders/{order_id}",
         "permission": "sales.view",
         "table": "sales_orders",
-        "handler_path": "fpa.domains.sales.sales_orders:SalesOrderService.get_order_by_id",
+        "handler_path": "yuxin.domains.sales.sales_orders:SalesOrderService.get_order_by_id",
         "available_transitions": True,
     },
     "feeding.get": {
@@ -69,7 +69,7 @@ DETAILS: dict[str, dict[str, str]] = {
         "path": "/api/v1/feedings/{feeding_id}",
         "permission": "feeding.view",
         "table": "feedings",
-        "handler_path": "fpa.domains.production.read:FeedingService.get_feeding_by_id",
+        "handler_path": "yuxin.domains.production.read:FeedingService.get_feeding_by_id",
         "path_param": "feeding_id",
     },
     "harvest.get": {
@@ -77,7 +77,7 @@ DETAILS: dict[str, dict[str, str]] = {
         "path": "/api/v1/harvests/{harvest_id}",
         "permission": "harvest.view",
         "table": "harvests",
-        "handler_path": "fpa.domains.production.read:HarvestService.get_harvest_by_id",
+        "handler_path": "yuxin.domains.production.read:HarvestService.get_harvest_by_id",
         "path_param": "harvest_id",
     },
     "delivery.get": {
@@ -85,7 +85,7 @@ DETAILS: dict[str, dict[str, str]] = {
         "path": "/api/v1/deliveries/{delivery_id}",
         "permission": "sales.view",
         "table": "deliveries",
-        "handler_path": "fpa.domains.sales.sales_orders:DeliveryService.get_delivery_by_id",
+        "handler_path": "yuxin.domains.sales.sales_orders:DeliveryService.get_delivery_by_id",
         "path_param": "delivery_id",
     },
     "receivable.get": {
@@ -93,7 +93,7 @@ DETAILS: dict[str, dict[str, str]] = {
         "path": "/api/v1/receivables/{receivable_id}",
         "permission": "finance.receivable.view",
         "table": "receivables",
-        "handler_path": "fpa.domains.sales.sales_orders:ReceivableService.get_receivable_by_id",
+        "handler_path": "yuxin.domains.sales.sales_orders:ReceivableService.get_receivable_by_id",
         "path_param": "receivable_id",
     },
     "payment.get": {
@@ -101,14 +101,14 @@ DETAILS: dict[str, dict[str, str]] = {
         "path": "/api/v1/payments/{payment_id}",
         "permission": "finance.payment.view",
         "table": "purchase_payments",
-        "handler_path": "fpa.domains.purchase.payments:PurchasePaymentService.get_payment_by_id",
+        "handler_path": "yuxin.domains.purchase.payments:PurchasePaymentService.get_payment_by_id",
         "path_param": "payment_id",
     },
 }
 
 
 def test_dictionary_detail_does_not_trigger_double_record_envelope() -> None:
-    from fpa.domains.master_data.resources_read import MaterialService
+    from yuxin.domains.master_data.resources_read import MaterialService
 
     class Service(MaterialService):
         @classmethod
@@ -138,7 +138,7 @@ def test_dictionary_detail_does_not_trigger_double_record_envelope() -> None:
 
 def _capability(name: str):
     load_all_status()
-    from fpa.kernel.capability import REGISTRY
+    from yuxin.kernel.capability import REGISTRY
 
     found = REGISTRY.find(name)
     assert found is not None, f"{name} 未注册 —— 详情页拿不到数据（这就是原缺口）"
@@ -199,7 +199,7 @@ def test_详情能力挂在真实处理器上且签名收得到路径参数(name
 
 @pytest.fixture(scope="module")
 def real_db_ready() -> bool:
-    from fpa.kernel.uow_factory import uow_factory
+    from yuxin.kernel.uow_factory import uow_factory
 
     try:
         with uow_factory().begin() as tx:
@@ -210,13 +210,13 @@ def real_db_ready() -> bool:
 
 
 def _open_tx():
-    from fpa.kernel.uow_factory import uow_factory
+    from yuxin.kernel.uow_factory import uow_factory
 
     return uow_factory().begin()
 
 
 def _context(permissions: frozenset[str], scope: Any):
-    from fpa.domains._base import Actor, ServiceContext
+    from yuxin.domains._base import Actor, ServiceContext
 
     return ServiceContext(
         actor=Actor(
@@ -239,7 +239,7 @@ def _row_or_skip(tx: Any, table: str) -> dict[str, Any]:
 
 
 def _farm_scope(*, user_id: int, farm_id: int):
-    from fpa.kernel.scope import Scope
+    from yuxin.kernel.scope import Scope
 
     return Scope.from_rows(
         [{"scope_type": "farm", "farm_id": farm_id, "code": "t7-probe"}], user_id=user_id
@@ -248,7 +248,7 @@ def _farm_scope(*, user_id: int, farm_id: int):
 
 @pytest.mark.parametrize("name", sorted(DETAILS))
 def test_不存在的记录返回_NOT_FOUND_而不是空对象(name: str, real_db_ready: bool) -> None:
-    from fpa.kernel.errors import DomainError, ErrorCode
+    from yuxin.kernel.errors import DomainError, ErrorCode
 
     spec = DETAILS[name]
     with _open_tx() as tx:
@@ -271,7 +271,7 @@ def test_范围外的记录必须被拒绝(name: str, real_db_ready: bool) -> No
     列表接口有 `WHERE` 兜着范围；详情只有主键 —— 所以详情是最容易泄数据的地方。
     构造一个"农场级范围指向别家农场"的账号，去读本组织的一行：必须拒绝。
     """
-    from fpa.kernel.errors import DomainError, ErrorCode
+    from yuxin.kernel.errors import DomainError, ErrorCode
 
     spec = DETAILS[name]
     with _open_tx() as tx:
@@ -316,22 +316,22 @@ def test_详情返回_available_transitions(name: str, real_db_ready: bool) -> N
 
 def _service_for(name: str):
     if name == "pond.get":
-        from fpa.domains.master_data.ponds import PondService
+        from yuxin.domains.master_data.ponds import PondService
 
         return PondService()
     if name == "purchase_order.get":
-        from fpa.domains.purchase.orders import PurchaseOrderService
+        from yuxin.domains.purchase.orders import PurchaseOrderService
 
         return PurchaseOrderService()
     if name == "payment.get":
-        from fpa.domains.purchase.payments import PurchasePaymentService
+        from yuxin.domains.purchase.payments import PurchasePaymentService
 
         return PurchasePaymentService()
     if name in {"feeding.get", "harvest.get"}:
-        from fpa.domains.production.read import FeedingService, HarvestService
+        from yuxin.domains.production.read import FeedingService, HarvestService
 
         return FeedingService() if name == "feeding.get" else HarvestService()
-    from fpa.domains.sales.sales_orders import (
+    from yuxin.domains.sales.sales_orders import (
         DeliveryService,
         ReceivableService,
         SalesOrderService,

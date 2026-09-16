@@ -64,7 +64,7 @@
 
 * `probe_kernel_contract.py` —— 33 条契约断言（写入后余额、多列、`FOR UPDATE` 有无、`jin` 换算、容差、`machine="*"`、排除键语义等），当前 **33 PASS / 0 FAIL**。
 * `probe_context_degradation.py` —— 上表"缺失时"一列的来源。
-* `probe_before_snapshot.py` —— 逐能力列是否声明了 `__fpa_load_by_id__`（`before` 快照的来源）。
+* `probe_before_snapshot.py` —— 逐能力列是否声明了 `__yuxin_load_by_id__`（`before` 快照的来源）。
 
 ## 5. 需要持续盯住的静默失效模式（来自上表实测）
 
@@ -155,7 +155,7 @@ NoOverlappingSource : SELECT id FROM cost_entries WHERE ... AND <分租键=%s> A
 
 ## 8. 证据脚本与核对快照
 
-`%TEMP%\fpa_verify\` 下的探针（可复跑、不依赖 MySQL）：
+`%TEMP%\yuxin_verify\` 下的探针（可复跑、不依赖 MySQL）：
 
 * `probe_kernel_contract.py` —— 33 条内核契约断言（写入后余额、多列、`FOR UPDATE` 有无、`jin` 换算、容差、`machine="*"`…）
 * `probe_context_degradation.py` —— §3 表里"缺失时"一列的来源
@@ -169,7 +169,7 @@ NoOverlappingSource : SELECT id FROM cost_entries WHERE ... AND <分租键=%s> A
 
 | 文件 | sha256 前 12 位 |
 |---|---|
-| `backend/fpa/kernel/invariants.py` | `0EE513A30370` |
+| `backend/yuxin/kernel/invariants.py` | `0EE513A30370` |
 
 当时读数：`pytest tests -q` → **184 passed / 1 xfailed**；`tools/kernel_smoke.py` → 全部通过；
 `tools/gen_contract_docs.py --check` → 3 个生成区与内核一致。

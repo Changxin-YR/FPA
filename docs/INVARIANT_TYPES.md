@@ -1,6 +1,6 @@
 # 内核不变量类型：契约与用法
 
-> 面向**声明能力的人**（域工程师）。内核实现见 `backend/fpa/kernel/invariants.py`，
+> 面向**声明能力的人**（域工程师）。内核实现见 `backend/yuxin/kernel/invariants.py`，
 > 单测见 `tests/test_invariants.py`（79 条，每条规则都有"通过 / 拒绝"两条路径）。
 >
 > 本文件只描述"怎么把规则挂到能力上、声明什么参数、要注意哪些列名"。

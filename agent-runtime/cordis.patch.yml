@@ -1,4 +1,4 @@
-# 本文件是 渔芯业务侧运行时配置的**唯一下发点**：由 `backend/fpa/harness/session.py`
+# 本文件是 渔芯业务侧运行时配置的**唯一下发点**：由 `backend/yuxin/harness/session.py`
 # 通过 SDK 的 `patches=` 传给 Harness 子进程（见 `_create_session`）。不给这个文件，
 # 子进程就退回 Harness 出厂形态 —— **没有任何 渔芯业务工具、也没有下面这条安全边界**。
 #
@@ -14,7 +14,7 @@
 # `disabled` 列表改的是**宿主树**（dsh-base 挂载的那些行），与插件包本身无关。因此：
 #
 #   * 本文件（部署层）= insert + disabled + 人格 —— 安全边界是部署方的决定；
-#   * `<DSH_HOME>/profiles/<profile>/node_modules/@fpa/dsh-biz-tools/cordis.patch.yml`
+#   * `<DSH_HOME>/profiles/<profile>/node_modules/@yuxin/dsh-biz-tools/cordis.patch.yml`
 #     （发布副本）= 只有 insert —— 任何用户装上这个包就能拿到工具。
 #
 # 两处各自描述一件事，所以互相同步、也不重复（本项目"两处描述同一件事就删一处"的
@@ -23,7 +23,7 @@
 #
 # ## 并集来源（两份取并集，少任何一条都意味着多一条逃逸路径）
 #
-#   A. 参考实现 `deepseek-harness-master/packages/extensions/fpa-agent-tools/cordis.patch.yml`
+#   A. 参考实现 `deepseek-harness-master/packages/extensions/yuxin-agent-tools/cordis.patch.yml`
 #      —— 只贡献 insert 段（它的 config 形态是已验证可用的）；它本身没有任何 disabled 条目。
 #   B. 早期版本生产在用的 `FPA/backend/layers/features/agent/agent-restricted.patch.yml`
 #      —— 提供下面全部 disabled 条目（bash / pwsh / fs / web / subprocess / skill /
@@ -48,7 +48,7 @@
 #
 # ## 并集来源（两份取并集，少任何一条都意味着多一条逃逸路径）
 #
-#   A. 参考实现 `deepseek-harness-master/packages/extensions/fpa-agent-tools/cordis.patch.yml`
+#   A. 参考实现 `deepseek-harness-master/packages/extensions/yuxin-agent-tools/cordis.patch.yml`
 #      —— 只贡献上面的 insert 段（它的 config 形态是已验证可用的）；它本身没有任何 disabled 条目。
 #   B. 早期版本生产在用的 `FPA/backend/layers/features/agent/agent-restricted.patch.yml`
 #      —— 提供下面全部 52 条 disabled 条目（bash / pwsh / fs / web / subprocess / skill /
@@ -63,11 +63,11 @@
 # 子进程环境中清除（`src/index.ts` 的 scrubCredentialsFromEnv）。
 
 - insert:
-    - id: fpa-biz-tools
-      name: '@fpa/dsh-biz-tools'
+    - id: yuxin-biz-tools
+      name: '@yuxin/dsh-biz-tools'
       config:
-        gatewayUrl: !!js process.env.FPA_AGENT_GATEWAY_URL ?? ''
-        contextToken: !!js process.env.FPA_AGENT_CONTEXT_TOKEN ?? ''
+        gatewayUrl: !!js process.env.YUXIN_AGENT_GATEWAY_URL ?? ''
+        contextToken: !!js process.env.YUXIN_AGENT_CONTEXT_TOKEN ?? ''
 
 # --- 人格：把 deployment:persona 从 Harness 默认编程助手换成 渔芯助手 ----------------
 #

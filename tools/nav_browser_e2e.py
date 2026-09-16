@@ -37,8 +37,8 @@ sys.path.insert(0, str(ROOT / "backend"))
 
 FRONTEND = ROOT / "frontend"
 
-BACKEND = os.environ.get("FPA_BACKEND_URL", "http://127.0.0.1:5101")
-FRONTEND_URL = os.environ.get("FPA_FRONTEND_URL", "http://127.0.0.1:5273")
+BACKEND = os.environ.get("YUXIN_BACKEND_URL", "http://127.0.0.1:5101")
+FRONTEND_URL = os.environ.get("YUXIN_FRONTEND_URL", "http://127.0.0.1:5273")
 
 DEMO_USER = "demo"
 DEMO_PASSWORD = "Demo1234!"
@@ -101,9 +101,9 @@ def _script() -> str:
     return r"""
 const { chromium } = require('playwright')
 
-const FRONTEND = process.env.FPA_FRONTEND_URL
-const USER = process.env.FPA_DEMO_USER
-const PASSWORD = process.env.FPA_DEMO_PASSWORD
+const FRONTEND = process.env.YUXIN_FRONTEND_URL
+const USER = process.env.YUXIN_DEMO_USER
+const PASSWORD = process.env.YUXIN_DEMO_PASSWORD
 
 ;(async () => {
   const out = { nav: [], visited: [], loginError: null, hasNav: false, consoleErrors: [] }
@@ -201,9 +201,9 @@ def main() -> int:
 
     env = dict(os.environ)
     env.update(
-        FPA_FRONTEND_URL=FRONTEND_URL,
-        FPA_DEMO_USER=DEMO_USER,
-        FPA_DEMO_PASSWORD=DEMO_PASSWORD,
+        YUXIN_FRONTEND_URL=FRONTEND_URL,
+        YUXIN_DEMO_USER=DEMO_USER,
+        YUXIN_DEMO_PASSWORD=DEMO_PASSWORD,
     )
     proc = subprocess.run(
         ["node", "-e", _script()],

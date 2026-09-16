@@ -1,8 +1,8 @@
 """核对 cost 域满足 ROLLOUT_CONTRACT §3 的新 `loader=` 契约。
 
-t15 把回读函数从"模块级手工挂 `__fpa_load_by_id__`"改成了 `Capability.loader=` 声明。
+t15 把回读函数从"模块级手工挂 `__yuxin_load_by_id__`"改成了 `Capability.loader=` 声明。
 本脚本检查 cost 域是否两种形态都合规：
-  * 写能力：必须能解析出 loader（`loader=` 字段 或 `__fpa_load_by_id__`）；
+  * 写能力：必须能解析出 loader（`loader=` 字段 或 `__yuxin_load_by_id__`）；
   * 读能力：**不得**声明 loader（读能力不写库，声明它是自相矛盾的）。
 """
 
@@ -13,7 +13,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "backend"))
 
-from fpa.bootstrap import load_all  # noqa: E402
+from yuxin.bootstrap import load_all  # noqa: E402
 
 
 def main() -> int:
@@ -23,8 +23,8 @@ def main() -> int:
     print("cost 域能力的 loader 声明：\n")
     for capability in registry.by_domain("cost"):
         declared = getattr(capability, "loader", None)
-        attached = getattr(capability.handler, "__fpa_load_by_id__", None)
-        no_loader = bool(getattr(capability.handler, "__fpa_no_loader__", False))
+        attached = getattr(capability.handler, "__yuxin_load_by_id__", None)
+        no_loader = bool(getattr(capability.handler, "__yuxin_no_loader__", False))
         kind = "读" if capability.is_read else "写"
 
         if capability.is_read:

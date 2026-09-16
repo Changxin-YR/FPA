@@ -132,9 +132,9 @@ def connect(database: str | None = None) -> pymysql.Connection:
     return pymysql.connect(
         host=os.environ.get("MYSQL_HOST", "127.0.0.1"),
         port=int(os.environ.get("MYSQL_PORT", "3306")),
-        user=os.environ.get("MYSQL_USER", "fpa"),
+        user=os.environ.get("MYSQL_USER", "yuxin"),
         password=os.environ.get("MYSQL_PASSWORD", ""),
-        database=database or os.environ.get("MYSQL_DATABASE", "fpa"),
+        database=database or os.environ.get("MYSQL_DATABASE", "yuxin"),
         charset="utf8mb4",
         cursorclass=pymysql.cursors.DictCursor,
         autocommit=False,
@@ -328,7 +328,7 @@ def cmd_reset(connection: pymysql.Connection) -> int:
         print("拒绝执行：reset 不允许在生产环境运行")
         return 1
 
-    database = os.environ.get("MYSQL_DATABASE", "fpa")
+    database = os.environ.get("MYSQL_DATABASE", "yuxin")
     root_password = os.environ.get("MYSQL_ROOT_PASSWORD", "")
     root_user = os.environ.get("MYSQL_ROOT_USER", "root")
     if not root_password:

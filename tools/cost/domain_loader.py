@@ -43,8 +43,8 @@ def load_registry_tolerant() -> tuple[object, list[str]]:
     `failed` 为空表示派生结果完整。**调用方必须对它做点什么**——
     打印、或让检查失败。忽略它就等于静默接受不完整的结论。
     """
-    from fpa.bootstrap import _module_name, discover_domains
-    from fpa.kernel.capability import REGISTRY
+    from yuxin.bootstrap import _module_name, discover_domains
+    from yuxin.kernel.capability import REGISTRY
 
     failed: list[str] = []
     for domain in discover_domains():

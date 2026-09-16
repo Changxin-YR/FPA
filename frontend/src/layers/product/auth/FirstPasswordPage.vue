@@ -52,7 +52,7 @@ async function submit(): Promise<void> {
     })
     let identifier = ''
     try {
-      identifier = sessionStorage.getItem('fpa:login-identifier') ?? ''
+      identifier = sessionStorage.getItem('yuxin:login-identifier') ?? ''
     } catch {
       identifier = ''
     }

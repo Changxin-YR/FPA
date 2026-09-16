@@ -84,7 +84,7 @@ describe('设计令牌是配色的唯一定义处', () => {
   })
 })
 
-describe('FPA 工作台视觉契约', () => {
+describe('渔芯 工作台视觉契约', () => {
   it('壳层具备工作台头部与移动导航结构', () => {
     const app = readFileSync(join(SRC, 'App.vue'), 'utf-8')
     const nav = readFileSync(join(SRC, 'layers', 'common', 'ui', 'AppNav.vue'), 'utf-8')

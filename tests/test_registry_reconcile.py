@@ -467,7 +467,7 @@ def test_partial_load_makes_check_fail_not_warn(monkeypatch) -> None:
     `load_note`。因为 `main()` 会先调 `parse_runtime()` 把它重置，注入的假状态永远看不到
     （我第一版就是这么写错的，实测 `main` 返回 1 而不是 3）。**走真实路径**才不会自欺。
     """
-    import fpa.bootstrap as bootstrap
+    import yuxin.bootstrap as bootstrap
     import registry_reconcile as rr
 
     def _boom() -> None:

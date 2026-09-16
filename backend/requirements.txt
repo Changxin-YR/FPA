@@ -1,4 +1,4 @@
-# FPA 后端依赖 —— 技术栈为既定选型，不得替换
+# 渔芯 后端依赖 —— 技术栈为既定选型，不得替换
 #
 # 明确不引入：SQLAlchemy / Alembic（既定选型是 PyMySQL，迁移用手写编号 SQL + 单一 runner）、
 #            FastAPI（既定选型是 Flask）、Redis、任何 ORM。

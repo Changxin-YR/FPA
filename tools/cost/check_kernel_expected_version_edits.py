@@ -15,8 +15,8 @@ sys.path.insert(0, str(BACKEND))
 
 
 def main() -> int:
-    invariants = (BACKEND / "fpa" / "kernel" / "invariants.py").read_text(encoding="utf-8")
-    capability = (BACKEND / "fpa" / "kernel" / "capability.py").read_text(encoding="utf-8")
+    invariants = (BACKEND / "yuxin" / "kernel" / "invariants.py").read_text(encoding="utf-8")
+    capability = (BACKEND / "yuxin" / "kernel" / "capability.py").read_text(encoding="utf-8")
 
     checks = [
         (
@@ -59,7 +59,7 @@ def main() -> int:
 
     # 行为层面的复核：比读代码更硬。
     print("\n=== 行为复核（不读代码，直接跑）===")
-    from fpa.bootstrap import load_all
+    from yuxin.bootstrap import load_all
 
     registry = load_all()
     confirm = registry.find("cost.entry.confirm")
@@ -74,7 +74,7 @@ def main() -> int:
             failures += 1
             print(f"  FAIL  cost.entry.confirm 的字段缺 expected_version：{keys}")
 
-    from fpa.kernel import invariants as inv
+    from yuxin.kernel import invariants as inv
 
     if hasattr(inv, "NoOverlappingSource") and hasattr(inv, "_is_self_match"):
         payload = {inv._EXCLUDE_ID_KEY: 7}

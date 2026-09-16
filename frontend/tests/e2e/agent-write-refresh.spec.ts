@@ -70,9 +70,9 @@ let probeCreated = false
 const MYSQL = {
   host: process.env.MYSQL_HOST ?? '127.0.0.1',
   port: process.env.MYSQL_PORT ?? '3306',
-  user: process.env.MYSQL_USER ?? 'fpa',
-  password: process.env.MYSQL_PASSWORD ?? 'fpa_dev_password',
-  database: process.env.MYSQL_DATABASE ?? 'fpa',
+  user: process.env.MYSQL_USER ?? 'yuxin',
+  password: process.env.MYSQL_PASSWORD ?? 'yuxin_dev_password',
+  database: process.env.MYSQL_DATABASE ?? 'yuxin',
 }
 
 function cleanupProbeRows(): number {

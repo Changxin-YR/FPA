@@ -20,8 +20,8 @@
 
 用法（独立库，避免与其它域的 e2e 抢数据）::
 
-    $env:MYSQL_DATABASE='fpa_sales'
-    $env:MYSQL_USER='fpa'; $env:MYSQL_PASSWORD='fpa_dev_password'
+    $env:MYSQL_DATABASE='yuxin_sales'
+    $env:MYSQL_USER='yuxin'; $env:MYSQL_PASSWORD='yuxin_dev_password'
     python tools/loader_probe.py
 """
 
@@ -34,8 +34,8 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
 
-from fpa.kernel.audit import AuditWriter  # noqa: E402
-from fpa.kernel.capability import (  # noqa: E402
+from yuxin.kernel.audit import AuditWriter  # noqa: E402
+from yuxin.kernel.capability import (  # noqa: E402
     Capability,
     HandlerResult,
     HttpMethod,
@@ -43,11 +43,11 @@ from fpa.kernel.capability import (  # noqa: E402
     Registry,
     Risk,
 )
-from fpa.kernel.fields import f_str  # noqa: E402
-from fpa.kernel.idempotency import IdempotencyStore  # noqa: E402
-from fpa.kernel.runner import ActorView, CapabilityRunner, Invocation  # noqa: E402
-from fpa.kernel.scope import Scope  # noqa: E402
-from fpa.kernel.uow import ConnectionConfig, UnitOfWork  # noqa: E402
+from yuxin.kernel.fields import f_str  # noqa: E402
+from yuxin.kernel.idempotency import IdempotencyStore  # noqa: E402
+from yuxin.kernel.runner import ActorView, CapabilityRunner, Invocation  # noqa: E402
+from yuxin.kernel.scope import Scope  # noqa: E402
+from yuxin.kernel.uow import ConnectionConfig, UnitOfWork  # noqa: E402
 
 FAILURES = 0
 
@@ -148,9 +148,9 @@ def config() -> ConnectionConfig:
     return ConnectionConfig(
         host=os.environ.get("MYSQL_HOST", "127.0.0.1"),
         port=int(os.environ.get("MYSQL_PORT", "3306")),
-        user=os.environ.get("MYSQL_USER", "fpa"),
+        user=os.environ.get("MYSQL_USER", "yuxin"),
         password=os.environ.get("MYSQL_PASSWORD", ""),
-        database=os.environ.get("MYSQL_DATABASE", "fpa_sales"),
+        database=os.environ.get("MYSQL_DATABASE", "yuxin_sales"),
     )
 
 
@@ -231,21 +231,21 @@ def main() -> int:
     #   否则断言的是"还没接线的 handler"——一个因为顺序而永远失败的假失败。
     registry = build_registry()
     check(
-        "loader=load_row -> handler.__fpa_load_by_id__ 已挂载",
-        getattr(ProbeService.create_row, "__fpa_load_by_id__", None) is ProbeService.load_row,
+        "loader=load_row -> handler.__yuxin_load_by_id__ 已挂载",
+        getattr(ProbeService.create_row, "__yuxin_load_by_id__", None) is ProbeService.load_row,
     )
     check(
-        "未声明 loader 的写能力 -> 没有 __fpa_load_by_id__（未接线状态）",
-        getattr(LegacyService.create_row, "__fpa_load_by_id__", None) is None,
+        "未声明 loader 的写能力 -> 没有 __yuxin_load_by_id__（未接线状态）",
+        getattr(LegacyService.create_row, "__yuxin_load_by_id__", None) is None,
     )
     check(
-        "loader=NO_LOADER -> 标记 __fpa_no_loader__，且不挂回读函数",
-        getattr(ProbeService.close_period, "__fpa_no_loader__", False) is True
-        and getattr(ProbeService.close_period, "__fpa_load_by_id__", None) is None,
+        "loader=NO_LOADER -> 标记 __yuxin_no_loader__，且不挂回读函数",
+        getattr(ProbeService.close_period, "__yuxin_no_loader__", False) is True
+        and getattr(ProbeService.close_period, "__yuxin_load_by_id__", None) is None,
     )
     check(
         "默认（不传 loader）与 NO_LOADER 可区分：前者不标记",
-        not hasattr(LegacyService.create_row, "__fpa_no_loader__"),
+        not hasattr(LegacyService.create_row, "__yuxin_no_loader__"),
     )
 
     runner = CapabilityRunner(

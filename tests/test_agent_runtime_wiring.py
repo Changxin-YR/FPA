@@ -57,7 +57,7 @@ import types
 
 import pytest
 
-from fpa.harness.session import (
+from yuxin.harness.session import (
     BIZ_TOOLS_PACKAGE,
     ExecutedToolCall,
     HarnessTurn,
@@ -67,7 +67,7 @@ from fpa.harness.session import (
     pending_confirmations,
     resolve_harness_patch,
 )
-from fpa.web.agent_turn import _line_from_notification, turn_result
+from yuxin.web.agent_turn import _line_from_notification, turn_result
 
 # ---------------------------------------------------------------------------
 # 真实事件夹具：逐字抄自 `.dsh-home/sessions/.../9076cbea330758a2/session.jsonl.zstd`
@@ -264,7 +264,7 @@ def test_resolve_harness_patch_finds_the_repo_file() -> None:
     它同时证明"接线在代码里"：只要这一步返回空串，`_create_session` 就会退回
     `patches=()`，也就是上面那个"全绿但是坏的"缺陷。
     """
-    from fpa.settings import Settings
+    from yuxin.settings import Settings
 
     resolved = resolve_harness_patch(Settings.from_env())
 
@@ -281,13 +281,13 @@ def test_explicit_setting_wins_and_missing_file_is_loud() -> None:
     """显式配置优先；指向不存在的文件时直接拒绝启动，不静默降级。"""
     from dataclasses import replace
 
-    from fpa.settings import Settings
+    from yuxin.settings import Settings
 
     settings = replace(
         Settings.from_env(), agent_harness_patch=r"C:\definitely\not\here\cordis.patch.yml"
     )
 
-    from fpa.kernel.errors import DomainError, ErrorCode
+    from yuxin.kernel.errors import DomainError, ErrorCode
 
     with pytest.raises(DomainError) as error:
         resolve_harness_patch(settings)
@@ -304,7 +304,7 @@ def test_patch_file_states_the_business_tool_package() -> None:
 
     import yaml
 
-    from fpa.settings import Settings
+    from yuxin.settings import Settings
 
     class _Loader(yaml.SafeLoader):
         pass
@@ -330,7 +330,7 @@ def test_patch_file_states_the_business_tool_package() -> None:
     config = prompt_row[0].get("config") or {}
     assert config.get("includeHarnessIdentity") is False, "必须关掉 Harness 写死的身份句"
     persona = str(config.get("persona") or "")
-    assert "渔芯AI水产养殖一体化系统" in persona and "塘小助" in persona, "人格必须是 FPA 管理系统的，不是 Harness 默认编程助手"
+    assert "渔芯AI水产养殖一体化系统" in persona and "塘小助" in persona, "人格必须是渔芯AI水产养殖一体化系统的，不是 Harness 默认编程助手"
     # `{{` 会被 Harness 当提示词变量严格解析，未注册的变量让整轮渲染报错。
     assert "{{" not in persona, "persona 里不许出现提示词变量引用"
 
@@ -347,10 +347,10 @@ def test_dev_server_passes_listen_port_to_agent_settings(monkeypatch: pytest.Mon
 
     waitress = types.ModuleType("waitress")
     waitress.serve = lambda *args, **kwargs: None  # type: ignore[attr-defined]
-    wsgi = types.ModuleType("fpa.wsgi")
+    wsgi = types.ModuleType("yuxin.wsgi")
     wsgi.app = object()  # type: ignore[attr-defined]
     monkeypatch.setitem(sys.modules, "waitress", waitress)
-    monkeypatch.setitem(sys.modules, "fpa.wsgi", wsgi)
+    monkeypatch.setitem(sys.modules, "yuxin.wsgi", wsgi)
     monkeypatch.delenv("PORT", raising=False)
 
     assert serve_dev.main(["serve_dev.py", "5199"]) == 0
@@ -608,8 +608,8 @@ def test_every_card_of_a_multi_card_turn_reaches_the_browser() -> None:
 
 def test_executed_turn_also_delivers_its_pending_cards() -> None:
     """混合轮次既要触发写入刷新，也不能丢掉一次性确认令牌。"""
-    from fpa.bootstrap import load_all
-    from fpa.kernel.capability import REGISTRY
+    from yuxin.bootstrap import load_all
+    from yuxin.kernel.capability import REGISTRY
 
     load_all()
     events = [TOOL_CALL_AREA_ARCHIVE, TOOL_RESULT_AREA_ARCHIVE]

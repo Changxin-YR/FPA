@@ -25,10 +25,10 @@ from pathlib import Path
 
 import pytest
 
-from fpa.kernel.errors import DomainError
-from fpa.kernel.fields import Field, FieldType, RefTarget, f_ref_by
-from fpa.kernel.scope import Scope, scope_predicate_for_columns
-from fpa.kernel.workflow import RESOURCES
+from yuxin.kernel.errors import DomainError
+from yuxin.kernel.fields import Field, FieldType, RefTarget, f_ref_by
+from yuxin.kernel.scope import Scope, scope_predicate_for_columns
+from yuxin.kernel.workflow import RESOURCES
 
 from conftest import load_all_status
 
@@ -119,7 +119,7 @@ def test_静态_ref_的元数据也带_resource_field_键但为空串():
 
 def test_cost_entry_create_的归属对象声明成多态引用():
     load_all_status()
-    from fpa.kernel.capability import REGISTRY
+    from yuxin.kernel.capability import REGISTRY
 
     capability = REGISTRY.find("cost.entry.create")
     assert capability is not None, "成本登记能力必须已注册"
@@ -154,7 +154,7 @@ def test_target_type_除具名缺口外的每个取值都是真实存在的资�
     当前所有目标类型都必须有列表资源，缺口集合为空。
     """
     load_all_status()
-    from fpa.domains.cost.service import TARGET_TYPES
+    from yuxin.domains.cost.service import TARGET_TYPES
 
     missing = {code for code in TARGET_TYPES if RESOURCES.find(code) is None}
     assert missing == set(_TARGET_TYPES_WITHOUT_RESOURCE), (
@@ -183,8 +183,8 @@ def test_归属对象取值到物理表的映射与枚举取值一一对应():
     但**取值集合**必须是同一套，否则会出现"前端能选、后端不认"或反过来的字段。
     """
     load_all_status()
-    from fpa.domains.cost.entries_write import _TARGET_TABLE
-    from fpa.domains.cost.service import TARGET_TYPES
+    from yuxin.domains.cost.entries_write import _TARGET_TABLE
+    from yuxin.domains.cost.service import TARGET_TYPES
 
     assert set(_TARGET_TABLE) == set(TARGET_TYPES)
 
@@ -197,7 +197,7 @@ def test_归属对象类型与对象必须同时给出():
     那条"半给必拒"的实现（它一旦被删，必填与否的判断依据就变了）。
     """
     load_all_status()
-    from fpa.domains.cost import entries_write
+    from yuxin.domains.cost import entries_write
 
     source = inspect.getsource(entries_write.CostWriteService.create_entry)
     assert "(target_type is None) != (target_id is None)" in source
@@ -214,7 +214,7 @@ def test_多态_ref_不改变_Agent_工具_schema_的参数类型():
     JSON Schema 类型改成 `object` 之类，模型会开始传错类型——所以这里钉住。
     """
     load_all_status()
-    from fpa.kernel.capability import REGISTRY
+    from yuxin.kernel.capability import REGISTRY
 
     capability = REGISTRY.find("cost.entry.create")
     assert capability is not None
@@ -274,7 +274,7 @@ def test_归属对象解析出的租户键仍按归属对象查():
     同样有效。
     """
     load_all_status()
-    from fpa.domains.cost.entries_write import _TARGET_TABLE
+    from yuxin.domains.cost.entries_write import _TARGET_TABLE
 
     assert set(_TARGET_TABLE) == {"farm", "area", "pond", "batch"}
     expected_tables = {

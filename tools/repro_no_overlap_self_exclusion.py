@@ -5,7 +5,7 @@
 由 `runner._invariant_extra()` 注入），所以先要实证：到底是"没注入"、
 "注入了但没进 SQL"，还是"注入了、也进了 SQL，但命中的那一行**真的不是本次自己**"。
 
-用法（临时库 `fpa_nooverlap_diag`，**绝不碰 `fpa`**）：
+用法（临时库 `yuxin_nooverlap_diag`，**绝不碰 `yuxin`**）：
 
     python tools\\repro_no_overlap_self_exclusion.py
 """
@@ -20,11 +20,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
 
 import pymysql  # noqa: E402
 
-from fpa.kernel.invariants import NoOverlappingSource  # noqa: E402
-from fpa.kernel.scope import Scope  # noqa: E402
-from fpa.kernel.uow import ConnectionConfig, UnitOfWork  # noqa: E402
+from yuxin.kernel.invariants import NoOverlappingSource  # noqa: E402
+from yuxin.kernel.scope import Scope  # noqa: E402
+from yuxin.kernel.uow import ConnectionConfig, UnitOfWork  # noqa: E402
 
-PROBE_DB = "fpa_nooverlap_diag"
+PROBE_DB = "yuxin_nooverlap_diag"
 
 
 def root_connection(database: str | None = None) -> pymysql.Connection:
@@ -140,7 +140,7 @@ def main() -> int:
 
     with root_connection() as conn, conn.cursor() as cur:
         cur.execute(f"DROP DATABASE IF EXISTS {PROBE_DB}")
-    print(f"\n临时库 {PROBE_DB} 已删除；未触碰 fpa")
+    print(f"\n临时库 {PROBE_DB} 已删除；未触碰 yuxin")
     return 0
 
 

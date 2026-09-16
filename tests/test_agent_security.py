@@ -6,9 +6,9 @@ from typing import Any
 
 import pytest
 
-from fpa.agent.gateway import AgentToolGateway
-from fpa.domains.access.admin import AdminService
-from fpa.kernel.capability import (
+from yuxin.agent.gateway import AgentToolGateway
+from yuxin.domains.access.admin import AdminService
+from yuxin.kernel.capability import (
     AgentExposure,
     Capability,
     Confirmation,
@@ -16,9 +16,9 @@ from fpa.kernel.capability import (
     Registry,
     Risk,
 )
-from fpa.kernel.confirmation import ConfirmationStore
-from fpa.kernel.errors import DomainError, ErrorCode
-from fpa.kernel.runner import ActorView, CapabilityRunner, Invocation, InvocationResult
+from yuxin.kernel.confirmation import ConfirmationStore
+from yuxin.kernel.errors import DomainError, ErrorCode
+from yuxin.kernel.runner import ActorView, CapabilityRunner, Invocation, InvocationResult
 
 
 class _NoTouchTx:
@@ -272,8 +272,8 @@ def test_gateway_maps_agent_tool_path_and_query_arguments_to_invocation() -> Non
 
 
 def test_agent_tools_cover_the_logged_in_users_business_permissions() -> None:
-    from fpa.bootstrap import load_all
-    from fpa.kernel.capability import REGISTRY
+    from yuxin.bootstrap import load_all
+    from yuxin.kernel.capability import REGISTRY
 
     load_all()
     permissions = frozenset(
@@ -303,8 +303,8 @@ def test_agent_tools_cover_the_logged_in_users_business_permissions() -> None:
 
 
 def test_agent_access_writes_use_server_side_hitl() -> None:
-    from fpa.bootstrap import load_all
-    from fpa.kernel.capability import Confirmation, REGISTRY
+    from yuxin.bootstrap import load_all
+    from yuxin.kernel.capability import Confirmation, REGISTRY
 
     load_all()
     for name in (

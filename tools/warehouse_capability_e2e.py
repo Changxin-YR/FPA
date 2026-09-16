@@ -4,7 +4,7 @@
 
 `warehouse_e2e.py` 的账本层用例（A–G 段）只需要 `UnitOfWork` + `ledger.py`，
 不依赖任何域的能力声明，因此永远是可跑的。但它的 H 段（能力流）必须拿到
-**真实注册表**，而 `fpa.bootstrap.load_all()` 会 import **全部**域——
+**真实注册表**，而 `yuxin.bootstrap.load_all()` 会 import **全部**域——
 任何一个 peer 域处于半编辑状态（实测过一次：sales 的 `service.py` 在导入期抛
 `NameError`）都会把整个 `load_all()` 拖下水，于是本域的能力层验收**被他人的
 进行中改动弄成红**。那种红不是我的缺陷，却和我的缺陷长得一样。
@@ -16,14 +16,14 @@
 ## 证明什么
 
     1. registry §1.6 的 18 条能力真的经组合根注册
-    2. 写能力的 `__fpa_load_by_id__` 无需夹具补挂（ROLLOUT_CONTRACT §3 的模板债）
+    2. 写能力的 `__yuxin_load_by_id__` 无需夹具补挂（ROLLOUT_CONTRACT §3 的模板债）
     3. §4 该挂的 7 类不变量都挂在正确的能力上，且 `PeriodOpen.date_field` 覆盖正确
     4. **反例（不变量真的在拦）**：#1 负库存、#5 自审、#7 关账期间、#19 重复编码
     5. **跨域**：`receipt.verify` 真的推进采购单并生成应付（直接查采购域的表）
 
 用法::
 
-    $env:MYSQL_DATABASE='fpa'; $env:MYSQL_PASSWORD='fpa_dev_password'
+    $env:MYSQL_DATABASE='yuxin'; $env:MYSQL_PASSWORD='yuxin_dev_password'
     python tools/warehouse_capability_e2e.py
 """
 
@@ -38,13 +38,13 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
 
-import fpa.kernel.capability as cap  # noqa: E402
-from fpa.kernel.audit import AuditWriter  # noqa: E402
-from fpa.kernel.errors import DomainError  # noqa: E402
-from fpa.kernel.idempotency import IdempotencyStore  # noqa: E402
-from fpa.kernel.runner import ActorView, CapabilityRunner, Invocation  # noqa: E402
-from fpa.kernel.scope import Scope  # noqa: E402
-from fpa.kernel.uow import ConnectionConfig, UnitOfWork  # noqa: E402
+import yuxin.kernel.capability as cap  # noqa: E402
+from yuxin.kernel.audit import AuditWriter  # noqa: E402
+from yuxin.kernel.errors import DomainError  # noqa: E402
+from yuxin.kernel.idempotency import IdempotencyStore  # noqa: E402
+from yuxin.kernel.runner import ActorView, CapabilityRunner, Invocation  # noqa: E402
+from yuxin.kernel.scope import Scope  # noqa: E402
+from yuxin.kernel.uow import ConnectionConfig, UnitOfWork  # noqa: E402
 
 D = lambda v: Decimal(str(v))  # noqa: E731
 
@@ -69,9 +69,9 @@ def config() -> ConnectionConfig:
     return ConnectionConfig(
         host=os.environ.get("MYSQL_HOST", "127.0.0.1"),
         port=int(os.environ.get("MYSQL_PORT", "3306")),
-        user=os.environ.get("MYSQL_USER", "fpa"),
-        password=os.environ.get("MYSQL_PASSWORD", "fpa_dev_password"),
-        database=os.environ.get("MYSQL_DATABASE", "fpa"),
+        user=os.environ.get("MYSQL_USER", "yuxin"),
+        password=os.environ.get("MYSQL_PASSWORD", "yuxin_dev_password"),
+        database=os.environ.get("MYSQL_DATABASE", "yuxin"),
     )
 
 
@@ -100,7 +100,7 @@ def load_domains() -> None:
     """装载本域及其真实依赖；缺失/损坏的域**显式报告**（不静默跳过）。"""
     broken = []
     for domain in DOMAINS:
-        module = f"fpa.domains.{domain}.capabilities"
+        module = f"yuxin.domains.{domain}.capabilities"
         try:
             importlib.import_module(module)
         except Exception as exc:  # noqa: BLE001
@@ -164,9 +164,9 @@ def main() -> int:
     missing_loader = [
         c.name for c in registry.all()
         if c.domain == "warehouse" and c.is_write
-        and getattr(c.handler, "__fpa_load_by_id__", None) is None
+        and getattr(c.handler, "__yuxin_load_by_id__", None) is None
     ]
-    check("写能力无需夹具补挂即可回读（__fpa_load_by_id__ 来自 handler 本身）",
+    check("写能力无需夹具补挂即可回读（__yuxin_load_by_id__ 来自 handler 本身）",
           missing_loader == [], f"missing: {missing_loader}")
 
     # ---- 不变量覆盖 ----
@@ -188,7 +188,7 @@ def main() -> int:
           all({"SameTenant", "UniqueCode"} <= declared.get(n, set())
               for n in ("receipt.create", "issue.create")))
 
-    from fpa.kernel.invariants import PeriodOpen
+    from yuxin.kernel.invariants import PeriodOpen
     date_fields = {
         i.date_field for c in registry.all() if c.domain == "warehouse"
         for i in c.invariants if isinstance(i, PeriodOpen)

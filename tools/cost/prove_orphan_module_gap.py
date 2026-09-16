@@ -23,7 +23,7 @@ BACKEND = pathlib.Path(__file__).resolve().parents[2] / "backend"
 #: 语法合法、但 import 时 NameError 的模块
 ORPHAN = "@dataclass\nclass X:\n    pass\n"
 
-PROBE = BACKEND / "fpa" / "domains" / "cost" / "_orphan_probe.py"
+PROBE = BACKEND / "yuxin" / "domains" / "cost" / "_orphan_probe.py"
 
 
 def main() -> int:
@@ -36,7 +36,7 @@ def main() -> int:
             ("compileall", [sys.executable, "-m", "compileall", "-q", str(BACKEND)]),
             ("load_all", [sys.executable, "-c",
                           "import sys;sys.path.insert(0,'backend');"
-                          "import fpa.bootstrap as b;b.load_all();print('OK')"]),
+                          "import yuxin.bootstrap as b;b.load_all();print('OK')"]),
         ):
             result = subprocess.run(command, cwd=BACKEND.parent,
                                     capture_output=True, text=True, encoding="utf-8")
@@ -48,7 +48,7 @@ def main() -> int:
 
         sys.path.insert(0, str(BACKEND))
         try:
-            importlib.import_module("fpa.domains.cost._orphan_probe")
+            importlib.import_module("yuxin.domains.cost._orphan_probe")
             print("  import 该模块 -> 通过（意外）")
         except NameError as exc:
             print(f"  import 该模块 -> NameError: {exc}")
@@ -63,7 +63,7 @@ def main() -> int:
 
     print("\n=== 结论 ===")
     print("  `compileall` 与 `load_all()` **都**查不出孤儿模块的运行期名称错误。")
-    print("  修法：预检除了 `load_all()`，还应当**逐个 import** `backend/fpa` 下的模块，")
+    print("  修法：预检除了 `load_all()`，还应当**逐个 import** `backend/yuxin` 下的模块，")
     print("        把 import 失败（不只是语法失败）也点名报出来。")
     print("  对改动者本人的纪律仍然是队长那条：结束一轮前跑 `bootstrap.load_all()`；")
     print("  但对**新写的、还没接线的文件**，只有逐个 import 才拦得住。")

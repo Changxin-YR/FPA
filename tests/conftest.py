@@ -2,13 +2,13 @@
 
 本仓库没有 `pyproject.toml` / `pytest.ini`，`tools/*.py` 各自用
 `sys.path.insert(0, .../backend)` 自举。`tests/` 也在这里显式引导一次——
-而不是要求把 `backend/fpa` 安装成包：安装成包会让"我改了源码但跑的是
+而不是要求把 `backend/yuxin` 安装成包：安装成包会让"我改了源码但跑的是
 已安装副本"这种失败成为可能，而本项目所有自检工具走的都是"直接跑当前源码"。
 
 ## `load_all_status` fixture：让域导入失败只剩一条清晰失败
 
 组合根按目录自动发现并 import 每个域的 `capabilities.py`。**任何一个域语法错 /
-import 失败**都会让 `fpa.bootstrap.load_all()` 整体装不起来，于是几十条依赖注册表的
+import 失败**都会让 `yuxin.bootstrap.load_all()` 整体装不起来，于是几十条依赖注册表的
 断言连锁变红（实测：1 条真故障 → 22 failed / 94 passed），真缺陷被噪声淹没。
 
 需要真实注册表的用例请 `from conftest import load_all_status` 并**调用**它：装载失败时

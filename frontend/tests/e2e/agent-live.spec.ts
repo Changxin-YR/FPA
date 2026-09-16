@@ -1,7 +1,7 @@
 import { test, expect, type Page } from '@playwright/test'
 
-const user = process.env.FPA_DEMO_USER ?? 'demo'
-const password = process.env.FPA_DEMO_PASSWORD ?? 'Demo1234!'
+const user = process.env.YUXIN_DEMO_USER ?? 'demo'
+const password = process.env.YUXIN_DEMO_PASSWORD ?? 'Demo1234!'
 
 async function blockedIfUnavailable(page: Page): Promise<void> {
   try {

@@ -88,9 +88,9 @@ function logout(): void {
       // 登出失败也把本地会话清掉：用户想离开就必须能离开。
     } finally {
       session.clear()
-      // ★ 必须带部署前缀：线上应用挂在 `/fpa/` 下，写死 `/auth/login` 会被 nginx
+      // ★ 必须带部署前缀：线上应用挂在 `/yuxin/` 下，写死 `/auth/login` 会被 nginx
       //   当成站点根路径，直接 404（实测反馈："退出登录出现 404"）。
-      //   `import.meta.env.BASE_URL` 由 Vite 的 `base` 提供（部署时 `/fpa/`）。
+      //   `import.meta.env.BASE_URL` 由 Vite 的 `base` 提供（部署时 `/yuxin/`）。
       const base = String(import.meta.env.BASE_URL || '/').replace(/\/$/, '')
       window.location.assign(`${base}/auth/login`)
     }

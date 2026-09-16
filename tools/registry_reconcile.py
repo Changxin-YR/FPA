@@ -3,7 +3,7 @@
 ## 为什么需要这个工具
 
 本项目的权威清单是 `docs/CAPABILITY_REGISTRY.md`（69 条能力 / 21 条业务不变量），
-而运行时事实是 `fpa.kernel.capability.REGISTRY`（由各域 `capabilities.py` 声明出来）。
+而运行时事实是 `yuxin.kernel.capability.REGISTRY`（由各域 `capabilities.py` 声明出来）。
 两者是**同一件事的两处描述**——按 `DEVELOPMENT.md` §4 的纪律，这种地方必然漂移：
 
 * 域名写错（`domain='master_data'` 写在 warehouse 的能力上）不会报错，只会静默错域；
@@ -66,9 +66,9 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
 
-import fpa.bootstrap as bootstrap  # noqa: E402
-from fpa.kernel.capability import REGISTRY  # noqa: E402
-from fpa.kernel.workflow import RESOURCES  # noqa: E402
+import yuxin.bootstrap as bootstrap  # noqa: E402
+from yuxin.kernel.capability import REGISTRY  # noqa: E402
+from yuxin.kernel.workflow import RESOURCES  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 REGISTRY_DOC = ROOT / "docs" / "CAPABILITY_REGISTRY.md"
@@ -78,7 +78,7 @@ DOMAIN_SECTION = re.compile(r"^###\s+1\.\d+\s+([a-z_]+)\s+—\s+(\d+)\s*条\s*$"
 #: 一级小节：`## 1. 能力清单…` / `## 4. 不变量清单`
 TOP_SECTION = re.compile(r"^##\s+(\d+)\.\s")
 #: 内核不变量模块（类型名的唯一事实来源）
-KERNEL_INVARIANTS = Path(__file__).resolve().parents[1] / "backend" / "fpa" / "kernel" / "invariants.py"
+KERNEL_INVARIANTS = Path(__file__).resolve().parents[1] / "backend" / "yuxin" / "kernel" / "invariants.py"
 #: 每个不变量类型都声明 `name = "TypeName"`；用它把 SQL 函数名从类型名里排除
 NAME_ATTRIBUTE = re.compile('name = "([A-Za-z]+)"')
 
@@ -692,14 +692,14 @@ def _available_routes() -> set[tuple[str, str]] | None:
     这条纪律在 `check_source_hygiene.py::walk()` 与 `source_index.py` 里都写过一遍）。
     """
     try:
-        from fpa.factory import build_app
-        from fpa.settings import Settings
+        from yuxin.factory import build_app
+        from yuxin.settings import Settings
     except Exception:  # noqa: BLE001
         return None
     try:
         # 显式传一个空注册表：本函数只关心**固定路由**（meta / auth / agent 等），
         # 能力路由不在判据内，所以不需要装载全部域（也就不依赖组合根能不能装起来）。
-        from fpa.kernel.capability import Registry as _Registry
+        from yuxin.kernel.capability import Registry as _Registry
 
         app = build_app(
             registry=_Registry(),
@@ -725,7 +725,7 @@ TENANT_HINTS = ("organization_id", "organization", "org_id", "tenant", "enterpri
 def tenant_blind_types() -> dict[str, bool]:
     """类型名 -> 该类型的实现里是否**完全没有**租户键（True = 盲）。
 
-    判据与证据脚本 `%TEMP%\\fpa_verify\\probe_tenant_blind.py` 一致：按 `^class ` 切块、
+    判据与证据脚本 `%TEMP%\\yuxin_verify\\probe_tenant_blind.py` 一致：按 `^class ` 切块、
     块内搜线索词。**不做语义判断**——语义判断留给人工与 e2e（那正是 [G] 存在的原因：
     把"该查而没查"的候选集缩到可人工过一遍的规模）。
     """
@@ -792,7 +792,7 @@ def tenant_dimension() -> tuple[tuple[str, ...], tuple[str, ...], tuple[str, ...
 
 
 #: `LIMIT 1` 的确定性扫描范围（源码，不含 tools/ 的 e2e 夹具）。
-ORDER_SCAN_ROOTS = ("backend/fpa/kernel", "backend/fpa/domains")
+ORDER_SCAN_ROOTS = ("backend/yuxin/kernel", "backend/yuxin/domains")
 
 
 def unordered_limit_one() -> tuple[tuple[tuple[str, int, str], ...], dict[str, int]]:
@@ -862,7 +862,7 @@ def parse_runtime() -> tuple[dict[str, Any], set[str]]:
             "（本表只覆盖装载成功的域；请以 bootstrap.load_all() 全绿后重跑为准）"
         )
     runtime = {item.name: item for item in REGISTRY.all()}
-    from fpa.kernel import invariants as invariant_module
+    from yuxin.kernel import invariants as invariant_module
 
     kernel_types = {
         name
@@ -1094,7 +1094,7 @@ def compare(doc: Reconcile, runtime: dict[str, Any], kernel_names: tuple[str, ..
     #   2. 两边都在内核词汇表里、但取值不同 → 逐能力错配。
     # 混在一起报的后果是"文档写了一个内核没有的词"会被读成"某一处标错了"，
     # 而两者的修法完全不同（一个改词汇表，一个改那一行）。
-    from fpa.kernel.capability import AuditPolicy, Risk  # noqa: F401  （词汇表来源）
+    from yuxin.kernel.capability import AuditPolicy, Risk  # noqa: F401  （词汇表来源）
 
     legal_risks = {str(item) for item in Risk}
     legal_audits = {"summary", "before_after", AUDIT_NOT_EXECUTED}

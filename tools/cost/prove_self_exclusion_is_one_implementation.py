@@ -20,13 +20,13 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "backend"))
 
-from fpa.kernel.errors import DomainError  # noqa: E402
-from fpa.kernel.invariants import (  # noqa: E402
+from yuxin.kernel.errors import DomainError  # noqa: E402
+from yuxin.kernel.invariants import (  # noqa: E402
     NoOverlappingSource,
     _EXCLUDE_ID_KEY,
     _is_self_match,
 )
-from fpa.kernel.scope import Scope  # noqa: E402
+from yuxin.kernel.scope import Scope  # noqa: E402
 
 
 class FakeTx:

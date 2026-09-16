@@ -28,7 +28,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
 
 import pymysql  # noqa: E402
 
-from fpa.kernel.uow_factory import connection_config  # noqa: E402
+from yuxin.kernel.uow_factory import connection_config  # noqa: E402
 
 #: 往来单位探针前缀（两条 spec 各一个）。
 _PARTNER_PREFIXES = ("UI-NEW-%", "E2E-CACHE-%")
@@ -43,7 +43,7 @@ def main() -> int:
     # 兜底（与 `tools/bootstrap_db.py` 同一默认值）；真实自定义口令仍以环境变量为准。
     values = {
         **os.environ,
-        "MYSQL_PASSWORD": os.environ.get("MYSQL_PASSWORD") or "fpa_dev_password",
+        "MYSQL_PASSWORD": os.environ.get("MYSQL_PASSWORD") or "yuxin_dev_password",
     }
     connection = pymysql.connect(**connection_config(values).as_kwargs())
     removed_partners = removed_areas = 0

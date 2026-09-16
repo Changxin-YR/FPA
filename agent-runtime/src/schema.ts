@@ -26,9 +26,9 @@
  *
  * 紧凑 spec **没有** `maxLength` / `minimum` / `maximum` / `pattern` / `format` 这些关键字槽位。
  * 而服务端**确实会下发它们**：
- *   - `backend/fpa/kernel/capability.py:354-360` 给 `page` / `page_size` 下发 `minimum` / `maximum`；
- *   - `backend/fpa/kernel/capability.py:369-374` 给 `expected_version` 下发 `minimum`；
- *   - `backend/fpa/kernel/fields.py:125-127` 给字段下发 `maxLength` / `minimum`。
+ *   - `backend/yuxin/kernel/capability.py:354-360` 给 `page` / `page_size` 下发 `minimum` / `maximum`；
+ *   - `backend/yuxin/kernel/capability.py:369-374` 给 `expected_version` 下发 `minimum`；
+ *   - `backend/yuxin/kernel/fields.py:125-127` 给字段下发 `maxLength` / `minimum`。
  *
  * 三种处置里，静默丢弃（会丢信息）与直接抛错（会让每一条真实 schema 都注册失败）都不可接受，
  * 因此选择**折叠进 `description`**：模型仍能在自然语言里看到约束，而**服务端始终是校验权威**

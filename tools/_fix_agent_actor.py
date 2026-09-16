@@ -26,8 +26,8 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-ACCESS = ROOT / "backend" / "fpa" / "domains" / "access" / "service.py"
-ROUTES = ROOT / "backend" / "fpa" / "web" / "routes_agent.py"
+ACCESS = ROOT / "backend" / "yuxin" / "domains" / "access" / "service.py"
+ROUTES = ROOT / "backend" / "yuxin" / "web" / "routes_agent.py"
 
 # --- 1) AccessService 增加按会话哈希解析 -----------------------------------
 
@@ -69,7 +69,7 @@ METHOD = '''    def resolve_by_session_hash(self, session_hash: str) -> Authenti
 
 # --- 2) routes_agent 改用它 ------------------------------------------------
 
-OLD_ACTOR = '''        from fpa.web.app import _current_actor
+OLD_ACTOR = '''        from yuxin.web.app import _current_actor
 
         token = request.headers.get("X-Agent-Context", "")
         payload = verify_context_token(current_app.config["SECRET_KEY"], token)
@@ -85,7 +85,7 @@ OLD_ACTOR = '''        from fpa.web.app import _current_actor
             )
         return actor, payload'''
 
-NEW_ACTOR = '''        access = current_app.config["FPA_ACCESS"]
+NEW_ACTOR = '''        access = current_app.config["YUXIN_ACCESS"]
         token = request.headers.get("X-Agent-Context", "")
         payload = verify_context_token(current_app.config["SECRET_KEY"], token)
 
@@ -113,8 +113,8 @@ NEW_ACTOR = '''        access = current_app.config["FPA_ACCESS"]
         )'''
 
 # 需要 ActorView 导入
-IMPORT_OLD = "from fpa.kernel.errors import DomainError, ErrorCode"
-IMPORT_NEW = "from fpa.kernel.errors import DomainError, ErrorCode\nfrom fpa.kernel.runner import ActorView"
+IMPORT_OLD = "from yuxin.kernel.errors import DomainError, ErrorCode"
+IMPORT_NEW = "from yuxin.kernel.errors import DomainError, ErrorCode\nfrom yuxin.kernel.runner import ActorView"
 
 
 def patch(path: Path, pairs: list[tuple[str, str]], label: str) -> bool:

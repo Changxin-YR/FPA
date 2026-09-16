@@ -7,11 +7,11 @@ from types import SimpleNamespace
 
 import pytest
 
-from fpa.harness import session as harness_session
-from fpa.harness.session import HarnessSessionManager
-from fpa.settings import Settings
-from fpa.web.routes_agent import issue_context_token, register_agent_routes
-from fpa.kernel.errors import DomainError, ErrorCode
+from yuxin.harness import session as harness_session
+from yuxin.harness.session import HarnessSessionManager
+from yuxin.settings import Settings
+from yuxin.web.routes_agent import issue_context_token, register_agent_routes
+from yuxin.kernel.errors import DomainError, ErrorCode
 
 
 def _settings(tmp_path: Path) -> Settings:
@@ -55,9 +55,9 @@ def test_context_token_uid_must_match_session_user(tmp_path: Path) -> None:
 
     app = Flask(__name__)
     app.testing = True
-    app.config.update(SECRET_KEY="test-secret", FPA_ACCESS=None, FPA_AGENT_GATEWAY=None)
+    app.config.update(SECRET_KEY="test-secret", YUXIN_ACCESS=None, YUXIN_AGENT_GATEWAY=None)
 
-    app.config["FPA_ACCESS"] = SimpleNamespace(
+    app.config["YUXIN_ACCESS"] = SimpleNamespace(
         resolve_by_session_hash=lambda _sid: SimpleNamespace(
             user_id=2,
             username="real-user",
@@ -66,7 +66,7 @@ def test_context_token_uid_must_match_session_user(tmp_path: Path) -> None:
             session_hash="sid-a",
         )
     )
-    app.config["FPA_AGENT_GATEWAY"] = SimpleNamespace(tools_payload=lambda _permissions: {"tools": []})
+    app.config["YUXIN_AGENT_GATEWAY"] = SimpleNamespace(tools_payload=lambda _permissions: {"tools": []})
     register_agent_routes(app)
 
     token = issue_context_token(

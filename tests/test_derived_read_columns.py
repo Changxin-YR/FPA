@@ -31,7 +31,7 @@ from func_call_index import string_literals
 
 
 def _resource_columns(name: str) -> dict[str, str]:
-    from fpa.kernel.workflow import RESOURCES
+    from yuxin.kernel.workflow import RESOURCES
 
     resource = RESOURCES.find(name)
     assert resource is not None, f"资源 {name} 未注册"
@@ -40,7 +40,7 @@ def _resource_columns(name: str) -> dict[str, str]:
 
 def test_应付与付款的读路径都取得到_supplier_name():
     load_all_status()
-    from fpa.domains.purchase import payments
+    from yuxin.domains.purchase import payments
 
     # 锚点：列声明在，本条守卫才有意义（删掉列声明就绕不过来了）
     assert "supplier_name" in _resource_columns("purchase_payable")
@@ -62,7 +62,7 @@ def test_应付与付款的读路径都取得到_supplier_name():
 def test_应付详情不得再出现重复列名导致的垃圾键():
     """`p.*` 已带 `supplier_id` 时，SQL 里不该再显式 SELECT 一个 `supplier_id`。"""
     load_all_status()
-    from fpa.domains.purchase import payments
+    from yuxin.domains.purchase import payments
 
     sql = " ".join(string_literals(payments.PurchasePaymentService._payable_scope_row))
     assert "p.*" in sql, "判据锚点丢了：这段 SQL 不再用 p.*"
@@ -82,8 +82,8 @@ def test_成本类别与币种的展示列由读路径提供():
     否则列声明在、值永远缺失，界面上只会是一片「—」。
     """
     load_all_status()
-    from fpa.domains.cost import entries as cost_entries
-    from fpa.domains.purchase import service as purchase_service
+    from yuxin.domains.cost import entries as cost_entries
+    from yuxin.domains.purchase import service as purchase_service
 
     cost_columns = _resource_columns("cost_entry")
     assert "category_label" in cost_columns, f"成本记录未声明 category_label（列={cost_columns}）"

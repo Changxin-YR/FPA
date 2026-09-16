@@ -18,14 +18,14 @@ from typing import Any
 
 import pytest
 
-from fpa.web.routes_agent import issue_context_token
+from yuxin.web.routes_agent import issue_context_token
 
 
-BASE_URL = os.environ.get("FPA_BACKEND_URL", "http://127.0.0.1:5101").rstrip("/")
-DEMO_USER = os.environ.get("FPA_DEMO_USER", "demo")
-DEMO_PASSWORD = os.environ.get("FPA_DEMO_PASSWORD", "Demo1234!")
-LOW_PRIV_USER = os.environ.get("FPA_LOW_PRIV_USER", "")
-LOW_PRIV_PASSWORD = os.environ.get("FPA_LOW_PRIV_PASSWORD", "")
+BASE_URL = os.environ.get("YUXIN_BACKEND_URL", "http://127.0.0.1:5101").rstrip("/")
+DEMO_USER = os.environ.get("YUXIN_DEMO_USER", "demo")
+DEMO_PASSWORD = os.environ.get("YUXIN_DEMO_PASSWORD", "Demo1234!")
+LOW_PRIV_USER = os.environ.get("YUXIN_LOW_PRIV_USER", "")
+LOW_PRIV_PASSWORD = os.environ.get("YUXIN_LOW_PRIV_PASSWORD", "")
 
 
 class Blocked(RuntimeError):
@@ -104,9 +104,9 @@ def _login(username: str, password: str) -> LiveClient:
     if not isinstance(user_payload, dict) or not isinstance(user_payload.get("user"), dict):
         pytest.fail(f"登录响应缺少 data.user: {payload!r}")
     user = user_payload["user"]
-    token = next((cookie.value for cookie in jar if cookie.name == "fpa_session"), "")
+    token = next((cookie.value for cookie in jar if cookie.name == "yuxin_session"), "")
     if not token:
-        pytest.fail("登录成功但没有 fpa_session Cookie")
+        pytest.fail("登录成功但没有 yuxin_session Cookie")
     return LiveClient(client.opener, user, token)
 
 
@@ -199,7 +199,7 @@ def _pond_id_and_area(live: LiveClient) -> tuple[int, int]:
 def _db_row(pond_id: int) -> dict[str, Any] | None:
     import pymysql
 
-    from fpa.kernel.uow_factory import connection_config
+    from yuxin.kernel.uow_factory import connection_config
 
     with pymysql.connect(**connection_config().as_kwargs()) as connection:
         with connection.cursor() as cursor:
@@ -317,7 +317,7 @@ def test_agent_confirmation_executes_and_database_reads_back(live: LiveClient) -
 
 def test_agent_tool_filtering_rejects_a_real_low_privilege_user() -> None:
     if not LOW_PRIV_USER or not LOW_PRIV_PASSWORD:
-        _blocked("未配置 FPA_LOW_PRIV_USER/FPA_LOW_PRIV_PASSWORD")
+        _blocked("未配置 YUXIN_LOW_PRIV_USER/YUXIN_LOW_PRIV_PASSWORD")
     weak = _login(LOW_PRIV_USER, LOW_PRIV_PASSWORD)
     conversation_id = f"qa-denied-{time.time_ns()}"
     status, payload = weak.request(

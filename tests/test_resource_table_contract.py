@@ -14,8 +14,8 @@ from __future__ import annotations
 
 import pytest
 
-import fpa.bootstrap as bootstrap
-from fpa.kernel.workflow import RESOURCES, Resource
+import yuxin.bootstrap as bootstrap
+from yuxin.kernel.workflow import RESOURCES, Resource
 
 
 def test_resource_without_explicit_table_raises() -> None:

@@ -14,8 +14,8 @@
 | 文件 | 注册表来源 | 证明什么 |
 |---|---|---|
 | `tools/web_e2e.py` | **手搓夹具**（1 条 `pond.create` + `selftest_ponds` 表） | HTTP 全链路与安全边界，最小、最快、可复现 |
-| `tools/master_data_e2e.py` | `fpa.bootstrap.load_all()` | 真实能力集的行为（权限/范围/不变量/回读），不经过模型 |
-| **本文件** | `fpa.bootstrap.load_all()` | **模型**能否触达真实能力集，并真的写进业务表 `ponds` |
+| `tools/master_data_e2e.py` | `yuxin.bootstrap.load_all()` | 真实能力集的行为（权限/范围/不变量/回读），不经过模型 |
+| **本文件** | `yuxin.bootstrap.load_all()` | **模型**能否触达真实能力集，并真的写进业务表 `ponds` |
 
 在 t11 之前，本文件用的是 `web_e2e.build_registry()` —— 也就是说"闭环证明"里的注册表是**假的**：
 它证明的是"模型能调用一条**夹具**能力、写进**夹具**表 `web_ponds`"，而 master_data 真实声明的
@@ -28,7 +28,7 @@ MySQL / Flask / Harness / 模型"都对，唯独注册表那一环是夹具—�
 
 ## 流程
 
-    0. §0 静态证明：注册表来自 `load_all()`，能力由 `fpa.domains.*` 声明，夹具模块未被 import
+    0. §0 静态证明：注册表来自 `load_all()`，能力由 `yuxin.domains.*` 声明，夹具模块未被 import
     1. 种探针数据：真实区域 + 一个只有 `pond.create` 权限、范围是那个区域的账号
     2. 起一个真实 Flask 服务（后台线程），装配用**真实注册表**
     3. 登录并为该账号签发上下文令牌（会话级 1800s）
@@ -102,14 +102,14 @@ def _machine_env(name: str) -> str:
 
 
 def config():
-    from fpa.kernel.uow import ConnectionConfig
+    from yuxin.kernel.uow import ConnectionConfig
 
     return ConnectionConfig(
         host=os.environ.get("MYSQL_HOST", "127.0.0.1"),
         port=int(os.environ.get("MYSQL_PORT", "3306")),
-        user=os.environ.get("MYSQL_USER", "fpa"),
+        user=os.environ.get("MYSQL_USER", "yuxin"),
         password=os.environ.get("MYSQL_PASSWORD", ""),
-        database=os.environ.get("MYSQL_DATABASE", "fpa"),
+        database=os.environ.get("MYSQL_DATABASE", "yuxin"),
     )
 
 
@@ -125,7 +125,7 @@ def prove_composition_root():
     失败了，我们仍然要能回答"注册表到底是真的是假的"——否则整条闭环的可信度无法分离。
     """
     print("=== 0. 装配来源证明：注册表来自真实组合根 ===")
-    from fpa.bootstrap import load_all
+    from yuxin.bootstrap import load_all
 
     registry = load_all()
     spec = registry.find("pond.create")
@@ -137,12 +137,12 @@ def prove_composition_root():
     factory_module = str(getattr(spec.service_factory, "__module__", ""))
     check(
         "能力处理器由业务域声明（不是 tools/ 下的夹具）",
-        handler_module.startswith("fpa.domains."),
+        handler_module.startswith("yuxin.domains."),
         f"handler 来自 {handler_module}",
     )
     check(
-        "能力服务由业务域声明（service_factory 指向 fpa.domains.*）",
-        factory_module.startswith("fpa.domains."),
+        "能力服务由业务域声明（service_factory 指向 yuxin.domains.*）",
+        factory_module.startswith("yuxin.domains."),
         f"service_factory 来自 {factory_module}",
     )
     check(
@@ -151,7 +151,7 @@ def prove_composition_root():
         "sys.modules 里出现了 web_e2e",
     )
 
-    from fpa.kernel.workflow import RESOURCES
+    from yuxin.kernel.workflow import RESOURCES
 
     pond_resource = RESOURCES.find("pond")
     check("资源声明的表名来自真实域声明（ponds，不是 selftest_ponds）",
@@ -186,7 +186,7 @@ def prepare_probe_data() -> dict:
     真实路径需要的是**真实区域 + 一个受数据范围约束的账号**，两件事的形态不同；
     共用会又变成"两处描述同一件事"。
     """
-    from fpa.kernel.password import hash_password
+    from yuxin.kernel.password import hash_password
 
     with config_uow().begin() as tx:
         area = tx.query_one("SELECT id, code, name FROM areas ORDER BY id LIMIT 1")
@@ -240,7 +240,7 @@ def prepare_probe_data() -> dict:
 
 
 def config_uow():
-    from fpa.kernel.uow import UnitOfWork
+    from yuxin.kernel.uow import UnitOfWork
 
     return UnitOfWork(config())
 
@@ -250,7 +250,7 @@ def _write_publish_manifest(source: Path, target: Path) -> None:
 
     为什么必须降级：`agent-runtime/cordis.patch.yml` 是"部署层唯一下发点"，
     它同时带着安全边界（52 条 `disabled: true` 关掉内建工具）与部署人格；
-    而装进 `<DSH_HOME>/profiles/<profile>/node_modules/@fpa/dsh-biz-tools/` 的那一份是
+    而装进 `<DSH_HOME>/profiles/<profile>/node_modules/@yuxin/dsh-biz-tools/` 的那一份是
     **发布副本**，只负责"工具源"（`insert`）—— 任何用户装上这个包就能拿到工具。
 
     原样复制会让同一件事有两处来源，而且**顺序相关**（先跑审计是绿的、先跑本脚本就红）。
@@ -268,7 +268,7 @@ def _write_publish_manifest(source: Path, target: Path) -> None:
     target.write_text(
         "# 发布副本（由 tools/live_agent_e2e.py 生成）：**只含工具源 insert**。\n"
         "# 安全边界（disabled 掉内建工具）与部署人格属于**部署层**的运行时 patch\n"
-        "# （agent-runtime/cordis.patch.yml），由 backend/fpa/harness/session.py 经 patches= 下发。\n"
+        "# （agent-runtime/cordis.patch.yml），由 backend/yuxin/harness/session.py 经 patches= 下发。\n"
         + block,
         encoding="utf-8",
         newline="\n",
@@ -304,17 +304,17 @@ def main() -> int:
     # 2. 组装应用（**真实注册表** + 真实数据范围解析）
     # ------------------------------------------------------------------
     print("\n=== 2. 组装应用 ===")
-    from fpa.agent.gateway import AgentToolGateway
-    from fpa.domains.access.scope_resolver import DataScopeResolver
-    from fpa.domains.access.service import AccessService
-    from fpa.kernel.audit import AuditWriter
-    from fpa.kernel.confirmation import ConfirmationGate, ConfirmationStore
-    from fpa.kernel.idempotency import IdempotencyStore
-    from fpa.kernel.runner import CapabilityRunner
-    from fpa.kernel.uow import UnitOfWork
-    from fpa.settings import Settings
-    from fpa.web.app import create_app
-    from fpa.web.routes_agent import issue_context_token
+    from yuxin.agent.gateway import AgentToolGateway
+    from yuxin.domains.access.scope_resolver import DataScopeResolver
+    from yuxin.domains.access.service import AccessService
+    from yuxin.kernel.audit import AuditWriter
+    from yuxin.kernel.confirmation import ConfirmationGate, ConfirmationStore
+    from yuxin.kernel.idempotency import IdempotencyStore
+    from yuxin.kernel.runner import CapabilityRunner
+    from yuxin.kernel.uow import UnitOfWork
+    from yuxin.settings import Settings
+    from yuxin.web.app import create_app
+    from yuxin.web.routes_agent import issue_context_token
 
     def uow_factory() -> UnitOfWork:
         return UnitOfWork(config())
@@ -355,7 +355,7 @@ def main() -> int:
         scope_resolver=DataScopeResolver(uow_factory),
         secret_key=settings.secret_key,
     )
-    app.config["FPA_AGENT_GATEWAY"] = gateway
+    app.config["YUXIN_AGENT_GATEWAY"] = gateway
     check("应用已组装（真实注册表 + 真实 DataScopeResolver）", True)
 
     # ------------------------------------------------------------------
@@ -399,7 +399,7 @@ def main() -> int:
         server.shutdown()
         return 1
 
-    from fpa.domains.access.service import hash_token, new_token
+    from yuxin.domains.access.service import hash_token, new_token
 
     # 直接造一个有效会话令牌（测试用）：把最新会话的 token_hash 替换成我们知道的令牌。
     # 为什么必须换：令牌原文只在登录响应里（Cookie），而本脚本无法从 Cookie 拿到它
@@ -425,7 +425,7 @@ def main() -> int:
     # 5. 安装插件到 **profile 的 node_modules**
     #
     # 位置由解析规则决定，不能猜。`cordis:include` 的报错直接写了它从哪里找：
-    #     Cannot find package '@fpa/dsh-biz-tools' imported from
+    #     Cannot find package '@yuxin/dsh-biz-tools' imported from
     #       <DSH_HOME>/profiles/sdk/
     # 第一版复制到了运行时闭包（runtime/node/node_modules/@deepseek-ai/），
     # 于是插件"装好了但找不到"。**读报错比读文档快。**
@@ -433,7 +433,7 @@ def main() -> int:
     print("\n=== 5. 安装插件到 profile 的 node_modules ===")
     profile_dir = Path(dsh_home) / "profiles" / "sdk"
     plugin_src = ROOT / "agent-runtime"
-    plugin_dst = profile_dir / "node_modules" / "@fpa" / "dsh-biz-tools"
+    plugin_dst = profile_dir / "node_modules" / "@yuxin" / "dsh-biz-tools"
 
     if not profile_dir.is_dir():
         print(f"  FAIL  profile 目录不存在：{profile_dir}")
@@ -469,11 +469,11 @@ def main() -> int:
         "".join(
             [
                 "- insert:\n",
-                "    - id: fpa-biz-tools\n",
-                "      name: '@fpa/dsh-biz-tools'\n",
+                "    - id: yuxin-biz-tools\n",
+                "      name: '@yuxin/dsh-biz-tools'\n",
                 "      config:\n",
-                "        gatewayUrl: !!js process.env.FPA_AGENT_GATEWAY_URL ?? ''\n",
-                "        contextToken: !!js process.env.FPA_AGENT_CONTEXT_TOKEN ?? ''\n",
+                "        gatewayUrl: !!js process.env.YUXIN_AGENT_GATEWAY_URL ?? ''\n",
+                "        contextToken: !!js process.env.YUXIN_AGENT_CONTEXT_TOKEN ?? ''\n",
             ]
         ),
         encoding="utf-8",
@@ -489,9 +489,9 @@ def main() -> int:
     env["AGENT_HARNESS_ROOT"] = os.environ.get(
         "AGENT_HARNESS_ROOT", r"<harness-runtime>"
     )
-    env["FPA_AGENT_GATEWAY_URL"] = f"http://127.0.0.1:{port}/api/v1/agent"
-    env["FPA_AGENT_CONTEXT_TOKEN"] = context_token
-    print(f"        gateway = {env['FPA_AGENT_GATEWAY_URL']}")
+    env["YUXIN_AGENT_GATEWAY_URL"] = f"http://127.0.0.1:{port}/api/v1/agent"
+    env["YUXIN_AGENT_CONTEXT_TOKEN"] = context_token
+    print(f"        gateway = {env['YUXIN_AGENT_GATEWAY_URL']}")
     print(f"        token   = {context_token[:16]}…")
 
     # 提示词用**真实区域 id**（从库里查出来的），不是夹具里那个硬编码的 7。

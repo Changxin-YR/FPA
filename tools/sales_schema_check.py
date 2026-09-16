@@ -16,8 +16,8 @@
 
 用法（独立库，避免与其它域的 e2e 抢数据 —— ROLLOUT_CONTRACT §5）::
 
-    $env:MYSQL_DATABASE='fpa_sales'
-    $env:MYSQL_USER='fpa'; $env:MYSQL_PASSWORD='fpa_dev_password'
+    $env:MYSQL_DATABASE='yuxin_sales'
+    $env:MYSQL_USER='yuxin'; $env:MYSQL_PASSWORD='yuxin_dev_password'
     python tools/bootstrap_db.py
     python tools/migrate.py apply
     python tools/sales_schema_check.py
@@ -81,9 +81,9 @@ def main() -> int:
     conn = pymysql.connect(
         host=os.environ.get("MYSQL_HOST", "127.0.0.1"),
         port=int(os.environ.get("MYSQL_PORT", "3306")),
-        user=os.environ.get("MYSQL_USER", "fpa"),
+        user=os.environ.get("MYSQL_USER", "yuxin"),
         password=os.environ.get("MYSQL_PASSWORD", ""),
-        database=os.environ.get("MYSQL_DATABASE", "fpa_sales"),
+        database=os.environ.get("MYSQL_DATABASE", "yuxin_sales"),
         autocommit=True,
     )
     cur = conn.cursor()

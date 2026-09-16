@@ -12,10 +12,10 @@
 
 ## 用法（顺序不能换）
 
-    $env:MYSQL_PASSWORD='fpa_dev_password'
-    python tools/seed_permissions.py --demo-role   # ① 派生权限码 + fpa-demo 角色
+    $env:MYSQL_PASSWORD='yuxin_dev_password'
+    python tools/seed_permissions.py --demo-role   # ① 派生权限码 + yuxin-demo 角色
     python tools/seed_acceptance.py                # ② 种业务角色 / 数据范围 / 验收账号
-    # ③ 业务数据：mysql -u root -p fpa < database/test_data.sql
+    # ③ 业务数据：mysql -u root -p yuxin < database/test_data.sql
 
 ## 幂等
 
@@ -31,9 +31,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "backend"))
 
-from fpa.kernel.password import hash_password  # noqa: E402
-from fpa.kernel.uow import UnitOfWork  # noqa: E402
-from fpa.kernel.uow_factory import connection_config  # noqa: E402
+from yuxin.kernel.password import hash_password  # noqa: E402
+from yuxin.kernel.uow import UnitOfWork  # noqa: E402
+from yuxin.kernel.uow_factory import connection_config  # noqa: E402
 
 #: 业务角色：(id, code, name, description, 权限码列表或 `"*"` 表示全部派生权限)。
 #:
@@ -192,7 +192,7 @@ SCOPE_DEFS: list[tuple[int, str, str, str, str | None]] = [
 
 #: 验收账号：(id, username, display_name, 明文口令, 角色码, 数据范围码)。
 ACCOUNT_DEFS: list[tuple[int, str, str, str, list[str], list[str]]] = [
-    (9204, "demo", "演示账号", "Demo1234!", ["fpa-demo-all-permissions", "super_admin"], ["user-demo-farm"]),
+    (9204, "demo", "演示账号", "Demo1234!", ["yuxin-demo-all-permissions", "super_admin"], ["user-demo-farm"]),
     (9205, "qa-maker", "测试经办员", "Tz9$kR4!", ["gm"], ["user-qa-maker-farm"]),
     (
         9206,

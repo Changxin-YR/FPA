@@ -22,13 +22,13 @@
 ## 探针数据与清理
 
 所有探针数据带前缀 `SALE-E2E-`，清理**只删带前缀的行**，不 `DELETE FROM sales_orders`
-清全表 —— 本脚本可能跑在共享开发库（`fpa`）上，清全表会把别人的数据一起删掉。
+清全表 —— 本脚本可能跑在共享开发库（`yuxin`）上，清全表会把别人的数据一起删掉。
 跨域引用（`harvests`）也按前缀清理，因为本域要读它。
 
 ## 常规验证方式：**连续跑两遍**
 
-    $env:MYSQL_DATABASE='fpa'
-    $env:MYSQL_USER='fpa'; $env:MYSQL_PASSWORD='fpa_dev_password'
+    $env:MYSQL_DATABASE='yuxin'
+    $env:MYSQL_USER='yuxin'; $env:MYSQL_PASSWORD='yuxin_dev_password'
     python tools/sales_e2e.py
     python tools/sales_e2e.py      # ← 第二遍必须同样 ALL PASS
 
@@ -58,11 +58,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
 
 import pymysql  # noqa: E402
 
-from fpa.kernel.errors import DomainError  # noqa: E402
-from fpa.kernel.idempotency import IdempotencyStore  # noqa: E402
-from fpa.kernel.runner import ActorView, CapabilityRunner, Invocation  # noqa: E402
-from fpa.kernel.scope import Scope  # noqa: E402
-from fpa.kernel.uow import ConnectionConfig, UnitOfWork  # noqa: E402
+from yuxin.kernel.errors import DomainError  # noqa: E402
+from yuxin.kernel.idempotency import IdempotencyStore  # noqa: E402
+from yuxin.kernel.runner import ActorView, CapabilityRunner, Invocation  # noqa: E402
+from yuxin.kernel.scope import Scope  # noqa: E402
+from yuxin.kernel.uow import ConnectionConfig, UnitOfWork  # noqa: E402
 
 FAILURES = 0
 
@@ -164,9 +164,9 @@ def _config() -> ConnectionConfig:
     return ConnectionConfig(
         host=os.environ.get("MYSQL_HOST", "127.0.0.1"),
         port=int(os.environ.get("MYSQL_PORT", "3306")),
-        user=os.environ.get("MYSQL_USER", "fpa"),
+        user=os.environ.get("MYSQL_USER", "yuxin"),
         password=os.environ.get("MYSQL_PASSWORD", ""),
-        database=os.environ.get("MYSQL_DATABASE", "fpa"),
+        database=os.environ.get("MYSQL_DATABASE", "yuxin"),
     )
 
 
@@ -464,16 +464,16 @@ def load_registry_tolerantly():
     """
     import importlib
 
-    from fpa.bootstrap import discover_domains
+    from yuxin.bootstrap import discover_domains
 
     unavailable: dict[str, str] = {}
     for domain in discover_domains():
         try:
-            importlib.import_module(f"fpa.domains.{domain}.capabilities")
+            importlib.import_module(f"yuxin.domains.{domain}.capabilities")
         except Exception as error:  # noqa: BLE001
             unavailable[domain] = f"{type(error).__name__}: {error}"
 
-    from fpa.kernel.capability import REGISTRY
+    from yuxin.kernel.capability import REGISTRY
 
     return REGISTRY, unavailable
 
@@ -571,7 +571,7 @@ def _run_checks(registry) -> int:  # noqa: C901 - 顺序检查清单，拆开会
     write_names = [n for n in sales_names if EXPECTED[n][2] != "read"]
     unwired = [
         n for n in write_names
-        if not callable(getattr(registry.find(n).handler, "__fpa_load_by_id__", None))
+        if not callable(getattr(registry.find(n).handler, "__yuxin_load_by_id__", None))
     ]
     check("每条写能力都可解析出回读函数", unwired == [], f"未挂载：{unwired}")
 
@@ -584,7 +584,7 @@ def _run_checks(registry) -> int:  # noqa: C901 - 顺序检查清单，拆开会
     runner = CapabilityRunner(
         registry=registry,
         uow_factory=uow_factory,
-        audit=__import__("fpa.kernel.audit", fromlist=["AuditWriter"]).AuditWriter(),
+        audit=__import__("yuxin.kernel.audit", fromlist=["AuditWriter"]).AuditWriter(),
         idempotency=IdempotencyStore(uow_factory),
         scope_resolver=PersonaScopeResolver(
             {

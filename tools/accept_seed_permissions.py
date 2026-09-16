@@ -19,7 +19,7 @@
 这个顺序本身也验证了：**权限链的终点是 `permissions.code` 的存在性**。
 
 用法：
-    $env:MYSQL_USER='fpa'; $env:MYSQL_PASSWORD='fpa_dev_password'
+    $env:MYSQL_USER='yuxin'; $env:MYSQL_PASSWORD='yuxin_dev_password'
     python tools/accept_seed_permissions.py
 """
 
@@ -33,9 +33,9 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "backend"))
 sys.path.insert(0, str(ROOT / "tools" / "cost"))
 
-from fpa.kernel.errors import DomainError  # noqa: E402
-from fpa.kernel.uow import UnitOfWork  # noqa: E402
-from fpa.kernel.uow_factory import connection_config  # noqa: E402
+from yuxin.kernel.errors import DomainError  # noqa: E402
+from yuxin.kernel.uow import UnitOfWork  # noqa: E402
+from yuxin.kernel.uow_factory import connection_config  # noqa: E402
 
 USERNAME = "t17_probe_user"
 PASSWORD = "T17-probe-Passw0rd!"
@@ -76,7 +76,7 @@ def prepare_probe() -> None:
 
     清理范围严格限定在**探针自建的东西**，不碰任何别人的行。
     """
-    from fpa.kernel.password import hash_password
+    from yuxin.kernel.password import hash_password
 
     with UnitOfWork(connection_config()).begin() as tx:
         # 复位：只删探针角色的授权行 + 探针要观察的那个权限码
@@ -157,7 +157,7 @@ def chain_permissions() -> list[str]:
     不自己写一份等价 SQL——那样就成了"两处描述同一件事"，而且可能与被测实现漂移。
     这里直接调用 **真实的 `AccessService.login()`**，让 `_load()` 去解析。
     """
-    from fpa.domains.access.service import AccessService
+    from yuxin.domains.access.service import AccessService
 
     service = AccessService(lambda: UnitOfWork(connection_config()))
     try:
@@ -174,10 +174,10 @@ def attempt_capability() -> tuple[str, str]:
     用能力自己声明的 `required_permission` 构造成 **ActorView 的真实权限集合**
     ——也就是"如果数据库里没有这个码，执行器看到的权限集合就是空的"。
     """
-    from fpa.kernel.audit import AuditWriter
-    from fpa.kernel.idempotency import IdempotencyStore
-    from fpa.kernel.runner import ActorView, CapabilityRunner, Invocation
-    from fpa.kernel.scope import Scope
+    from yuxin.kernel.audit import AuditWriter
+    from yuxin.kernel.idempotency import IdempotencyStore
+    from yuxin.kernel.runner import ActorView, CapabilityRunner, Invocation
+    from yuxin.kernel.scope import Scope
 
     from domain_loader import load_registry_tolerant
 
@@ -227,7 +227,7 @@ def attempt_capability() -> tuple[str, str]:
 
 
 def main() -> int:
-    from fpa.kernel.errors import DomainError  # noqa: F401  （供 attempt 内引用）
+    from yuxin.kernel.errors import DomainError  # noqa: F401  （供 attempt 内引用）
 
     print("=" * 78)
     print("t17 验收：同一个用户 / 同一条能力，种之前失败、种之后成功")

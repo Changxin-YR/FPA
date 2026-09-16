@@ -28,15 +28,15 @@ registry §2.4 把这条列为"关键改进"。判据必须是可执行的：提
 **4. 本文件自己**不**用夹具注册表。**
 
 `tools/web_e2e.py` 的 `build_registry()` 是只注册一条能力的手搓夹具。本文件走
-`fpa.bootstrap.load_all()` 的真实组合根——夹具全绿证明不了真实声明是对的
+`yuxin.bootstrap.load_all()` 的真实组合根——夹具全绿证明不了真实声明是对的
 （`docs/DEVELOPMENT.md` §1 记过这个坑：夹具注册表曾让七套自检全绿而实际能力一条没装）。
 
 用法::
 
-    $env:MYSQL_USER='fpa'; $env:MYSQL_PASSWORD='fpa_dev_password'
+    $env:MYSQL_USER='yuxin'; $env:MYSQL_PASSWORD='yuxin_dev_password'
     python tools/access_e2e.py
 
-**可以重复跑**：所有探针数据都带 `FPA-ACCESS-E2E-` 前缀，脚本开头先清一遍
+**可以重复跑**：所有探针数据都带 `YUXIN-ACCESS-E2E-` 前缀，脚本开头先清一遍
 （`PROBE_PREFIX`），末尾再清一遍。全表 `DELETE` 是禁止的——脚本可能跑在共享开发库上。
 """
 
@@ -50,18 +50,18 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
 
 import pymysql  # noqa: E402
 
-from fpa.bootstrap import load_all  # noqa: E402,F401  —— 见模块 docstring 第 4 点
-from fpa.kernel.audit import AuditWriter  # noqa: E402
-from fpa.kernel.errors import DomainError  # noqa: E402
-from fpa.kernel.idempotency import IdempotencyStore  # noqa: E402
-from fpa.kernel.runner import ActorView, CapabilityRunner, Invocation  # noqa: E402
-from fpa.kernel.scope import Scope  # noqa: E402
-from fpa.kernel.uow import ConnectionConfig, UnitOfWork  # noqa: E402
+from yuxin.bootstrap import load_all  # noqa: E402,F401  —— 见模块 docstring 第 4 点
+from yuxin.kernel.audit import AuditWriter  # noqa: E402
+from yuxin.kernel.errors import DomainError  # noqa: E402
+from yuxin.kernel.idempotency import IdempotencyStore  # noqa: E402
+from yuxin.kernel.runner import ActorView, CapabilityRunner, Invocation  # noqa: E402
+from yuxin.kernel.scope import Scope  # noqa: E402
+from yuxin.kernel.uow import ConnectionConfig, UnitOfWork  # noqa: E402
 
 FAILURES = 0
 
 #: 探针标记。所有本脚本创建的行都带它，清理时只删这些。
-PROBE_PREFIX = "FPA-ACCESS-E2E-"
+PROBE_PREFIX = "YUXIN-ACCESS-E2E-"
 PROBE_ROLE_CODE = PROBE_PREFIX + "ROLE"
 PROBE_SCOPE_CODE = PROBE_PREFIX + "SCOPE"
 #: 只在"合法值集合 = 能力清单"那条断言里用：一个**不对应任何能力**的权限码。
@@ -74,9 +74,9 @@ def _config() -> ConnectionConfig:
     return ConnectionConfig(
         host=os.environ.get("MYSQL_HOST", "127.0.0.1"),
         port=int(os.environ.get("MYSQL_PORT", "3306")),
-        user=os.environ.get("MYSQL_USER", "fpa"),
+        user=os.environ.get("MYSQL_USER", "yuxin"),
         password=os.environ.get("MYSQL_PASSWORD", ""),
-        database=os.environ.get("MYSQL_DATABASE", "fpa"),
+        database=os.environ.get("MYSQL_DATABASE", "yuxin"),
     )
 
 
@@ -703,7 +703,7 @@ def main() -> int:
         # ==================================================================
         print("\n=== 6. 契约：旧固定路由已删除，能力路由存在 ===")
         # ==================================================================
-        from fpa.factory import build_app
+        from yuxin.factory import build_app
 
         app = build_app()
         rules = {str(rule.rule) for rule in app.url_map.iter_rules()}
@@ -808,13 +808,13 @@ def main() -> int:
 
 
 def _hash(password: str) -> str:
-    from fpa.kernel.password import hash_password
+    from yuxin.kernel.password import hash_password
 
     return hash_password(password)
 
 
 def _verify(password: str, stored: str) -> bool:
-    from fpa.kernel.password import verify_password
+    from yuxin.kernel.password import verify_password
 
     return verify_password(password, stored)
 

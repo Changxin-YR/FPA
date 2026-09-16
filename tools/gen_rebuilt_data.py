@@ -14,7 +14,7 @@ P-*/PO-2026-*"（review 明确点名）。本工具把"文档 == 当前库"变�
 
 用法::
 
-    $env:MYSQL_PASSWORD='fpa_dev_password'
+    $env:MYSQL_PASSWORD='yuxin_dev_password'
     python tools/gen_rebuilt_data.py
 """
 
@@ -28,9 +28,9 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "backend"))
 
-from fpa.factory import build_app  # noqa: E402
-from fpa.kernel.uow import UnitOfWork  # noqa: E402
-from fpa.kernel.uow_factory import connection_config  # noqa: E402
+from yuxin.factory import build_app  # noqa: E402
+from yuxin.kernel.uow import UnitOfWork  # noqa: E402
+from yuxin.kernel.uow_factory import connection_config  # noqa: E402
 
 OUT = ROOT / ".verify" / "REBUILT_DATA.md"
 DEMO_USER = "demo"

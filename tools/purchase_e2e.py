@@ -24,7 +24,7 @@
 只跑正例不能证明规则存在 —— 一个永远返回成功的不变量和一个永远返回失败的不变量
 在正例下看起来一样。
 
-**3. `__fpa_load_by_id__` **不靠夹具补挂**也能通过。**
+**3. `__yuxin_load_by_id__` **不靠夹具补挂**也能通过。**
 
 `tools/{runner,web,agent}_e2e.py` 都在夹具里手动补挂它，而那掩盖了
 `domains/master_data/ponds_write.py` 的真实缺陷（生产路径下 master_data 的写能力
@@ -40,7 +40,7 @@
 
 用法::
 
-    $env:MYSQL_USER='fpa'; $env:MYSQL_PASSWORD='fpa_dev_password'
+    $env:MYSQL_USER='yuxin'; $env:MYSQL_PASSWORD='yuxin_dev_password'
     python tools\\purchase_e2e.py
 """
 
@@ -56,13 +56,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
 
 import pymysql  # noqa: E402
 
-from fpa.domains._base import Actor, ServiceContext  # noqa: E402
-from fpa.kernel.audit import AuditWriter  # noqa: E402
-from fpa.kernel.errors import DomainError  # noqa: E402
-from fpa.kernel.idempotency import IdempotencyStore  # noqa: E402
-from fpa.kernel.runner import ActorView, CapabilityRunner, Invocation  # noqa: E402
-from fpa.kernel.scope import Scope  # noqa: E402
-from fpa.kernel.uow import ConnectionConfig, UnitOfWork  # noqa: E402
+from yuxin.domains._base import Actor, ServiceContext  # noqa: E402
+from yuxin.kernel.audit import AuditWriter  # noqa: E402
+from yuxin.kernel.errors import DomainError  # noqa: E402
+from yuxin.kernel.idempotency import IdempotencyStore  # noqa: E402
+from yuxin.kernel.runner import ActorView, CapabilityRunner, Invocation  # noqa: E402
+from yuxin.kernel.scope import Scope  # noqa: E402
+from yuxin.kernel.uow import ConnectionConfig, UnitOfWork  # noqa: E402
 
 FAILURES = 0
 
@@ -149,9 +149,9 @@ def _config() -> ConnectionConfig:
     return ConnectionConfig(
         host=os.environ.get("MYSQL_HOST", "127.0.0.1"),
         port=int(os.environ.get("MYSQL_PORT", "3306")),
-        user=os.environ.get("MYSQL_USER", "fpa"),
+        user=os.environ.get("MYSQL_USER", "yuxin"),
         password=os.environ.get("MYSQL_PASSWORD", ""),
-        database=os.environ.get("MYSQL_DATABASE", "fpa"),
+        database=os.environ.get("MYSQL_DATABASE", "yuxin"),
     )
 
 
@@ -203,16 +203,16 @@ def load_registry_tolerantly():
     """逐域装载能力声明，返回 (registry, {失败的域: 异常描述})。"""
     import importlib
 
-    from fpa.bootstrap import discover_domains
+    from yuxin.bootstrap import discover_domains
 
     unavailable: dict[str, str] = {}
     for domain in discover_domains():
         try:
-            importlib.import_module(f"fpa.domains.{domain}.capabilities")
+            importlib.import_module(f"yuxin.domains.{domain}.capabilities")
         except Exception as error:  # noqa: BLE001
             unavailable[domain] = f"{type(error).__name__}: {error}"
 
-    from fpa.kernel.capability import REGISTRY
+    from yuxin.kernel.capability import REGISTRY
 
     return REGISTRY, unavailable
 
@@ -258,11 +258,11 @@ def main() -> int:  # noqa: C901 - 顺序检查清单，拆开会让"哪一步�
     )
 
     # ★ 这一节是 t13 那个缺陷在本域的**回归护栏**：
-    #   master_data 的写能力没有绑 `__fpa_load_by_id__`，而这个 e2e 家族
+    #   master_data 的写能力没有绑 `__yuxin_load_by_id__`，而这个 e2e 家族
     #   （runner/web/agent）都在夹具里手动补挂 —— 于是生产路径全都会 500
     #   而七套自检照样全绿。本域**不补挂**，先在这里把"没绑"钉死。
-    from fpa.domains.purchase.orders_write import PurchaseOrderWriteService
-    from fpa.domains.purchase.payments_write import PurchasePaymentWriteService
+    from yuxin.domains.purchase.orders_write import PurchaseOrderWriteService
+    from yuxin.domains.purchase.payments_write import PurchasePaymentWriteService
 
     unbound: list[str] = []
     for cls, methods in (
@@ -273,11 +273,11 @@ def main() -> int:  # noqa: C901 - 顺序检查清单，拆开会让"哪一步�
         (PurchasePaymentWriteService, ("create_payment", "verify_payment")),
     ):
         for method_name in methods:
-            loader = getattr(getattr(cls, method_name), "__fpa_load_by_id__", None)
+            loader = getattr(getattr(cls, method_name), "__yuxin_load_by_id__", None)
             if not callable(loader):
                 unbound.append(f"{cls.__name__}.{method_name}")
     check(
-        "7 个写能力的 __fpa_load_by_id__ 全部在**生产代码**里绑定（不靠夹具）",
+        "7 个写能力的 __yuxin_load_by_id__ 全部在**生产代码**里绑定（不靠夹具）",
         not unbound,
         f"未绑定：{unbound}",
     )
@@ -778,7 +778,7 @@ def main() -> int:  # noqa: C901 - 顺序检查清单，拆开会让"哪一步�
         )
         receipt_id = tx.last_insert_id()
 
-    from fpa.domains.purchase.orders_write import apply_receipt
+    from yuxin.domains.purchase.orders_write import apply_receipt
 
     # apply_receipt 是跨域入口：调用方（warehouse 的 receipt.verify）传自己的 ctx，
     # 采购侧用 `ctx.scope` 做第三层范围校验。这里构造等价的 ServiceContext。
@@ -817,7 +817,7 @@ def main() -> int:  # noqa: C901 - 顺序检查清单，拆开会让"哪一步�
     # ------------------------------------------------------------------
     print("\n=== 10. 应付与付款：§4 #4 AmountWithin 是唯一强制点 ===")
     # 应付由 receipt.verify 经 `create_from_receipt` 生成（契约 §2）。
-    from fpa.domains.purchase.payables import create_from_receipt
+    from yuxin.domains.purchase.payables import create_from_receipt
 
     with uow_factory().begin() as tx:
         payable = create_from_receipt(

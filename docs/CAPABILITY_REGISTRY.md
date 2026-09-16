@@ -592,7 +592,7 @@ requires_idempotency_key  ⟺  (kind == "create")  ∨  (confirmation == "always
   `creates_record`），**不是逐行手写**。要复核**运行时**的那一半，跑这一条：
 
   ```powershell
-  python -c "import sys;sys.path.insert(0,'backend');from fpa.bootstrap import load_all;from fpa.kernel.capability import REGISTRY;load_all();c=list(REGISTRY.all());print(len(c), sum(1 for x in c if x.requires_idempotency_key))"
+  python -c "import sys;sys.path.insert(0,'backend');from yuxin.bootstrap import load_all;from yuxin.kernel.capability import REGISTRY;load_all();c=list(REGISTRY.all());print(len(c), sum(1 for x in c if x.requires_idempotency_key))"
   ```
 
   **文档与工具不一致时以工具为准**，并把文档改成工具的输出。

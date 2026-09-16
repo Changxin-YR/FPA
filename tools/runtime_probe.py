@@ -42,7 +42,7 @@ def main() -> int:
     blocked |= not _check("Harness patch", patch_ok, str(patch))
 
     package = ROOT / "agent-runtime" / "lib" / "index.js"
-    installed = dsh_home / "profiles" / "sdk" / "node_modules" / "@fpa" / "dsh-biz-tools" / "lib" / "index.js" if dsh_home else None
+    installed = dsh_home / "profiles" / "sdk" / "node_modules" / "@yuxin" / "dsh-biz-tools" / "lib" / "index.js" if dsh_home else None
     blocked |= not _check("本地 Agent 插件构建物", package.is_file(), str(package))
     blocked |= not _check("DSH_HOME 插件构建物", installed is not None and installed.is_file(), str(installed))
 

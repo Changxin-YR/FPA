@@ -15,7 +15,7 @@ from __future__ import annotations
 import hashlib
 import pathlib
 
-BACKEND = pathlib.Path(__file__).resolve().parents[2] / "backend" / "fpa" / "kernel"
+BACKEND = pathlib.Path(__file__).resolve().parents[2] / "backend" / "yuxin" / "kernel"
 
 #: 复核人 记录的冻结哈希（负责人 转述）
 RECORDED = {

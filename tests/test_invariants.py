@@ -19,9 +19,9 @@ from typing import Any
 
 import pytest
 
-from fpa.kernel.errors import DomainError, ErrorCode
-from fpa.kernel.fields import f_str
-from fpa.kernel.invariants import (
+from yuxin.kernel.errors import DomainError, ErrorCode
+from yuxin.kernel.fields import f_str
+from yuxin.kernel.invariants import (
     AmountWithin,
     AtLeastOneOf,
     AtMostOnePending,
@@ -36,8 +36,8 @@ from fpa.kernel.invariants import (
     UniqueCode,
     ZeroBalance,
 )
-from fpa.kernel.scope import Scope
-from fpa.kernel.workflow import Resource, State, Tone, Transition, Workflow
+from yuxin.kernel.scope import Scope
+from yuxin.kernel.workflow import Resource, State, Tone, Transition, Workflow
 
 # ---------------------------------------------------------------------------
 # 替身与夹具
@@ -113,7 +113,7 @@ def _pond_workflow() -> Workflow:
 @pytest.fixture(scope="module", autouse=True)
 def _register_test_resource() -> None:
     """注册一个测试专用资源（不碰 master_data 的任何声明）。"""
-    from fpa.kernel.workflow import RESOURCES
+    from yuxin.kernel.workflow import RESOURCES
 
     if RESOURCES.find("ut_pond") is None:
         RESOURCES.register(
@@ -217,7 +217,7 @@ def test_status_allows_edit_passes_without_before_snapshot() -> None:
 
 def test_optimistic_lock_resolves_the_table_from_the_resource_name() -> None:
     """没有 `_resource_table` 时，用 `_resource` 去 `RESOURCES` 查表名。"""
-    from fpa.kernel.invariants import NoNegativeStock as _  # noqa: F401
+    from yuxin.kernel.invariants import NoNegativeStock as _  # noqa: F401
 
     tx = FakeUnitOfWork(("FROM ut_ponds", {"row_version": 4}))
     error = rejects(
@@ -237,7 +237,7 @@ def test_optimistic_lock_resolves_the_table_from_the_resource_name() -> None:
 
 
 def _no_negative_stock() -> Any:
-    from fpa.kernel.invariants import NoNegativeStock
+    from yuxin.kernel.invariants import NoNegativeStock
 
     return NoNegativeStock(
         table="inventory_ledger",
@@ -269,7 +269,7 @@ def test_no_negative_stock_passes_non_negative_balance() -> None:
 
 def test_no_negative_stock_checks_every_declared_column() -> None:
     """存塘要同时保证数量与重量不为负：数量为 0、重量为 −5 也必须被拒。"""
-    from fpa.kernel.invariants import NoNegativeStock
+    from yuxin.kernel.invariants import NoNegativeStock
 
     tx = FakeUnitOfWork(
         ("FROM batch_stock_records", {"quantity_delta": 0, "weight_delta_kg": -5})
@@ -306,7 +306,7 @@ def test_no_negative_stock_refuses_lines_without_group_key() -> None:
 
 
 def test_no_negative_stock_accepts_the_legacy_single_column_alias() -> None:
-    from fpa.kernel.invariants import NoNegativeStock
+    from yuxin.kernel.invariants import NoNegativeStock
 
     invariant = NoNegativeStock(table="inventory_ledger", quantity_column="quantity_delta")
     assert invariant.columns == ("quantity_delta",)
@@ -1238,8 +1238,8 @@ def test_at_most_one_pending_declines_empty_dims() -> None:
 
 
 def test_runner_injects_resource_context_for_optimistic_lock() -> None:
-    from fpa.kernel.capability import Capability, HttpMethod
-    from fpa.kernel.runner import CapabilityRunner
+    from yuxin.kernel.capability import Capability, HttpMethod
+    from yuxin.kernel.runner import CapabilityRunner
 
     spec = Capability(
         name="ut_pond.update",
@@ -1268,8 +1268,8 @@ def test_runner_injects_resource_context_for_optimistic_lock() -> None:
 
 
 def test_runner_context_can_be_extended_by_the_service() -> None:
-    from fpa.kernel.capability import Capability, HttpMethod
-    from fpa.kernel.runner import CapabilityRunner
+    from yuxin.kernel.capability import Capability, HttpMethod
+    from yuxin.kernel.runner import CapabilityRunner
 
     spec = Capability(
         name="ut_pond.verify",
@@ -1389,7 +1389,7 @@ class _MinimalService:
         scope: Any,
         code: f_str("编号", required=True, max_length=64),
     ) -> Any:
-        from fpa.kernel.capability import HandlerResult
+        from yuxin.kernel.capability import HandlerResult
 
         ctx.require("ut.invariant.create")
         tx.execute("INSERT INTO ut_invariants (code) VALUES (%s)", (code,))
@@ -1401,7 +1401,7 @@ class _MinimalService:
 
 
 def _run_invariant_capability(spy: _SpyInvariant) -> Any:
-    from fpa.kernel.capability import (
+    from yuxin.kernel.capability import (
         AgentExposure,
         Capability,
         Confirmation,
@@ -1409,10 +1409,10 @@ def _run_invariant_capability(spy: _SpyInvariant) -> Any:
         Registry,
         Risk,
     )
-    from fpa.kernel.idempotency import IdempotencyStore
-    from fpa.kernel.runner import ActorView, CapabilityRunner, Invocation
+    from yuxin.kernel.idempotency import IdempotencyStore
+    from yuxin.kernel.runner import ActorView, CapabilityRunner, Invocation
 
-    _MinimalService.create.__fpa_load_by_id__ = _MinimalService.load_for_audit  # type: ignore[attr-defined]
+    _MinimalService.create.__yuxin_load_by_id__ = _MinimalService.load_for_audit  # type: ignore[attr-defined]
 
     registry = Registry()
     registry.register(
@@ -1495,7 +1495,7 @@ class _MinimalService:
         scope: Any,
         code: f_str("编号", required=True, max_length=64),
     ) -> Any:
-        from fpa.kernel.capability import HandlerResult
+        from yuxin.kernel.capability import HandlerResult
 
         ctx.require("ut.invariant.create")
         tx.execute("INSERT INTO ut_invariants (code) VALUES (%s)", (code,))
@@ -1509,7 +1509,7 @@ class _MinimalService:
 
 
 def _invariant_classes() -> list[type]:
-    from fpa.kernel import invariants as module
+    from yuxin.kernel import invariants as module
 
     return [getattr(module, name) for name in module.__all__]
 
@@ -1556,7 +1556,7 @@ _MINIMAL_DECLARATIONS: dict[str, Any] = {}
 def _minimal_declarations() -> dict[str, Any]:
     if _MINIMAL_DECLARATIONS:
         return _MINIMAL_DECLARATIONS
-    from fpa.kernel import invariants as module
+    from yuxin.kernel import invariants as module
 
     _MINIMAL_DECLARATIONS.update(
         {
@@ -1658,7 +1658,7 @@ class _RecordingTx:
 
 
 def test_no_overlapping_source_pushes_self_exclusion_into_sql() -> None:
-    from fpa.kernel.invariants import NoOverlappingSource
+    from yuxin.kernel.invariants import NoOverlappingSource
 
     tx = _RecordingTx(conflict_id=None)  # 库里只有"我这一行"
     check(
@@ -1686,7 +1686,7 @@ def test_no_overlapping_source_pushes_self_exclusion_into_sql() -> None:
 
 
 def test_no_overlapping_source_still_rejects_another_row() -> None:
-    from fpa.kernel.invariants import NoOverlappingSource
+    from yuxin.kernel.invariants import NoOverlappingSource
 
     tx = _RecordingTx(conflict_id=12)  # 除了我以外还有一行 → 真冲突
     rejects(
@@ -1752,7 +1752,7 @@ def test_without_exclusion_a_stale_row_would_have_been_a_false_positive() -> Non
     这条不测内核（内核已经修好），它把"缺陷为什么会出现"固化成可执行的事实，
     防止将来有人把排除又改回"取回来再比对"。
     """
-    from fpa.kernel.invariants import AtMostOnePending
+    from yuxin.kernel.invariants import AtMostOnePending
 
     invariant = AtMostOnePending(dims=("pond_id",), table="pond_status_change_requests")
     tx = _RecordingTx(conflict_id=None, legacy_row={"id": 12})  # 12 = 别人的旧行
@@ -1772,7 +1772,7 @@ def test_without_exclusion_a_stale_row_would_have_been_a_false_positive() -> Non
 
 
 def test_unique_code_pushes_self_exclusion_into_sql() -> None:
-    from fpa.kernel.invariants import UniqueCode
+    from yuxin.kernel.invariants import UniqueCode
 
     tx = _RecordingTx(conflict_id=None)
     check(
@@ -1792,7 +1792,7 @@ def test_unique_code_pushes_self_exclusion_into_sql() -> None:
 
 
 def test_unique_code_still_rejects_another_row_with_same_code() -> None:
-    from fpa.kernel.invariants import UniqueCode
+    from yuxin.kernel.invariants import UniqueCode
 
     tx = _RecordingTx(conflict_id=12)
     rejects(
@@ -1805,9 +1805,9 @@ def test_unique_code_still_rejects_another_row_with_same_code() -> None:
 
 def test_every_key_column_default_is_id() -> None:
     """三个类型的 `key_column` 默认都是 `id`（本项目所有表的主键列名）。"""
-    from fpa.kernel.invariants import AtMostOnePending as _A
-    from fpa.kernel.invariants import NoOverlappingSource as _N
-    from fpa.kernel.invariants import UniqueCode as _U
+    from yuxin.kernel.invariants import AtMostOnePending as _A
+    from yuxin.kernel.invariants import NoOverlappingSource as _N
+    from yuxin.kernel.invariants import UniqueCode as _U
 
     assert _A(dims=("pond_id",), table="t").key_column == "id"
     assert _N(table="t").key_column == "id"
@@ -1896,7 +1896,7 @@ def test_state_transition_still_rejects_unregistered_machine_name() -> None:
 def test_state_transition_raises_when_row_is_locatable_but_unreadable() -> None:
     """交了状态字段、能定位到行、却读不到旧值 → 该能力缺回读函数 → 报错。
 
-    事故形态：`__fpa_load_by_id__` 忘挂（t13/t15 修过的模板债）。静默跳过的后果是
+    事故形态：`__yuxin_load_by_id__` 忘挂（t13/t15 修过的模板债）。静默跳过的后果是
     状态转移校验在这条能力上不生效，而执行器本该在回读阶段就暴露它。
     """
     error = rejects(
@@ -2153,7 +2153,7 @@ class _UniqueCodeService:
         scope: Any,
         code: f_str("编号", required=True, max_length=64),
     ) -> Any:
-        from fpa.kernel.capability import HandlerResult
+        from yuxin.kernel.capability import HandlerResult
 
         ctx.require("ut.unique.create")
         tx.execute("INSERT INTO ut_uniques (code) VALUES (%s)", (code,))
@@ -2168,7 +2168,7 @@ class _UniqueCodeService:
 
 def _run_unique_code_capability(*, rows: list[dict]) -> Any:
     """跑一次真实的执行器流程（处理器先写、不变量后查），返回 InvocationResult。"""
-    from fpa.kernel.capability import (
+    from yuxin.kernel.capability import (
         AgentExposure,
         Capability,
         Confirmation,
@@ -2176,11 +2176,11 @@ def _run_unique_code_capability(*, rows: list[dict]) -> Any:
         Registry,
         Risk,
     )
-    from fpa.kernel.idempotency import IdempotencyStore
-    from fpa.kernel.invariants import UniqueCode as _UniqueCode
-    from fpa.kernel.runner import ActorView, CapabilityRunner, Invocation
+    from yuxin.kernel.idempotency import IdempotencyStore
+    from yuxin.kernel.invariants import UniqueCode as _UniqueCode
+    from yuxin.kernel.runner import ActorView, CapabilityRunner, Invocation
 
-    _UniqueCodeService.create.__fpa_load_by_id__ = _UniqueCodeService.load_for_audit  # type: ignore[attr-defined]
+    _UniqueCodeService.create.__yuxin_load_by_id__ = _UniqueCodeService.load_for_audit  # type: ignore[attr-defined]
 
     registry = Registry()
     registry.register(
@@ -2400,7 +2400,7 @@ def test_no_overlapping_source_keeps_cross_type_check_when_source_type_is_unknow
 
 
 def _period_open() -> Any:
-    from fpa.kernel.invariants import PeriodOpen
+    from yuxin.kernel.invariants import PeriodOpen
 
     return PeriodOpen(date_field="occurred_on")
 
@@ -2495,7 +2495,7 @@ def test_period_open_passes_when_this_tenant_has_no_period_row() -> None:
 
 def test_period_open_declines_empty_tenant_keys() -> None:
     """`tenant_keys=()` → 构造期拒绝（与 `NoOverlappingSource` 同一道门）。"""
-    from fpa.kernel.invariants import PeriodOpen
+    from yuxin.kernel.invariants import PeriodOpen
 
     with pytest.raises(ValueError):
         PeriodOpen(tenant_keys=())
@@ -2508,7 +2508,7 @@ def test_period_open_never_ships_an_unordered_limited_query() -> None:
     "实现里还有这两件事"。本项目已发生过两次"修正静默消失"，而没有 MySQL 时
     静态源码守卫是唯一抓得住它的手段。
     """
-    from fpa.kernel.invariants import PeriodOpen
+    from yuxin.kernel.invariants import PeriodOpen
 
     source = inspect.getsource(PeriodOpen.check)
     assert "tenant_keys" in source, "PeriodOpen 不再读 tenant_keys（租户键可能被撤回）"

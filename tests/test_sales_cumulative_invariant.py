@@ -45,8 +45,8 @@ from typing import Any
 
 import pytest
 
-from fpa.kernel.invariants import CumulativeWithin
-from fpa.kernel.scope import Scope
+from yuxin.kernel.invariants import CumulativeWithin
+from yuxin.kernel.scope import Scope
 
 class _FakeTx:
     """只实现 `CumulativeWithin` 会用到的那部分（`query_one`）。
@@ -269,8 +269,8 @@ def test_declaration_matches_domain() -> None:
     加这条是因为上面几条刻意复制了一份参数：复制是为了"不依赖域可导入"，
     而复制就有分叉风险，所以用这条把两者钉在一起。
     """
-    pytest.importorskip("fpa.domains.sales.capabilities")
-    from fpa.kernel.capability import REGISTRY
+    pytest.importorskip("yuxin.domains.sales.capabilities")
+    from yuxin.kernel.capability import REGISTRY
 
     capability = REGISTRY.find("delivery.verify")
     if capability is None:

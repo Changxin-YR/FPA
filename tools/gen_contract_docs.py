@@ -27,9 +27,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "backend"))
 
-from fpa.kernel.errors import ErrorCode, _HTTP_STATUS  # noqa: E402
-from fpa.kernel.fields import FieldType  # noqa: E402
-from fpa.kernel.workflow import RowAction, Tone  # noqa: E402
+from yuxin.kernel.errors import ErrorCode, _HTTP_STATUS  # noqa: E402
+from yuxin.kernel.fields import FieldType  # noqa: E402
+from yuxin.kernel.workflow import RowAction, Tone  # noqa: E402
 
 INTERFACES = ROOT / "docs" / "INTERFACES.md"
 
@@ -74,7 +74,7 @@ def render_error_codes() -> str:
     rows.append("")
     rows.append(
         f"共 **{len(list(ErrorCode))}** 个错误码。这张表由 "
-        "`tools/gen_contract_docs.py` 从 `backend/fpa/kernel/errors.py` 生成，"
+        "`tools/gen_contract_docs.py` 从 `backend/yuxin/kernel/errors.py` 生成，"
         "**不要手工编辑**——CI 会校验它与内核逐字节一致。"
     )
     return "\n".join(rows)

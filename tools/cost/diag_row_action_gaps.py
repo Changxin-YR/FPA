@@ -13,9 +13,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "backend"))
 
 import importlib  # noqa: E402
 
-from fpa.bootstrap import _module_name, discover_domains  # noqa: E402
-from fpa.kernel.capability import REGISTRY  # noqa: E402
-from fpa.kernel.workflow import RESOURCES, RowAction  # noqa: E402
+from yuxin.bootstrap import _module_name, discover_domains  # noqa: E402
+from yuxin.kernel.capability import REGISTRY  # noqa: E402
+from yuxin.kernel.workflow import RESOURCES, RowAction  # noqa: E402
 
 
 def main() -> int:

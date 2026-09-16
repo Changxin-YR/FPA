@@ -4,8 +4,8 @@ from types import SimpleNamespace
 
 
 def test_warehouse_verified_rows_expose_edit_and_archive_actions():
-    from fpa.domains.warehouse.service import WAREHOUSE_WORKFLOW
-    from fpa.kernel.workflow import RowAction
+    from yuxin.domains.warehouse.service import WAREHOUSE_WORKFLOW
+    from yuxin.kernel.workflow import RowAction
 
     actions = WAREHOUSE_WORKFLOW.allowed_actions("verified")
     assert RowAction.VIEW in actions
@@ -14,10 +14,10 @@ def test_warehouse_verified_rows_expose_edit_and_archive_actions():
 
 
 def test_final_receipt_states_are_accepted_by_post_write_invariants():
-    from fpa.domains.sales.capabilities import _amount_within
-    from fpa.domains.warehouse.capabilities import _register_all as register_warehouse
-    from fpa.kernel.capability import REGISTRY
-    from fpa.kernel.invariants import ReferencedStatus
+    from yuxin.domains.sales.capabilities import _amount_within
+    from yuxin.domains.warehouse.capabilities import _register_all as register_warehouse
+    from yuxin.kernel.capability import REGISTRY
+    from yuxin.kernel.invariants import ReferencedStatus
 
     register_warehouse()
     receipt = REGISTRY.get("receipt.verify")
@@ -31,10 +31,10 @@ def test_final_receipt_states_are_accepted_by_post_write_invariants():
 
 
 def test_path_parameter_is_passed_to_handler_and_wins_over_body():
-    from fpa.kernel.capability import Capability, HandlerResult, Registry, Risk
-    from fpa.kernel.runner import ActorView, CapabilityRunner, Invocation
-    from fpa.kernel.scope import Scope
-    from fpa.kernel.uow import UnitOfWork
+    from yuxin.kernel.capability import Capability, HandlerResult, Registry, Risk
+    from yuxin.kernel.runner import ActorView, CapabilityRunner, Invocation
+    from yuxin.kernel.scope import Scope
+    from yuxin.kernel.uow import UnitOfWork
 
     seen = {}
 
@@ -78,7 +78,7 @@ def test_path_parameter_is_passed_to_handler_and_wins_over_body():
 
 
 def test_access_grants_use_reference_fields_and_workbench_is_registered():
-    import fpa.bootstrap as bootstrap
+    import yuxin.bootstrap as bootstrap
 
     registry = bootstrap.load_all()
     create_user = registry.get("access.user.create")
@@ -90,9 +90,9 @@ def test_access_grants_use_reference_fields_and_workbench_is_registered():
 
 
 def test_new_materials_start_as_draft_until_verified(monkeypatch):
-    from fpa.domains.master_data import masterdata_write
-    from fpa.domains.master_data.masterdata_write import MaterialWriteService
-    from fpa.kernel.scope import Scope
+    from yuxin.domains.master_data import masterdata_write
+    from yuxin.domains.master_data.masterdata_write import MaterialWriteService
+    from yuxin.kernel.scope import Scope
 
     class Tx:
         def __init__(self):
@@ -146,9 +146,9 @@ def test_new_materials_start_as_draft_until_verified(monkeypatch):
     assert "'draft'" in tx.sql
 
 def test_warehouse_create_returns_decorated_record(monkeypatch):
-    from fpa.domains.warehouse import warehouse_write
-    from fpa.domains.warehouse.warehouse_write import WarehouseWriteService
-    from fpa.kernel.scope import Scope
+    from yuxin.domains.warehouse import warehouse_write
+    from yuxin.domains.warehouse.warehouse_write import WarehouseWriteService
+    from yuxin.kernel.scope import Scope
 
     class Tx:
         def execute(self, *_args, **_kwargs):
@@ -195,7 +195,7 @@ def test_warehouse_create_returns_decorated_record(monkeypatch):
 
 
 def test_flask_path_keeps_non_numeric_parameters_as_strings():
-    from fpa.web.app import _flask_path
+    from yuxin.web.app import _flask_path
 
     assert _flask_path("/api/v1/cost/periods/{period}/close") == "/api/v1/cost/periods/<period>/close"
     assert _flask_path("/api/v1/areas/{area_id}") == "/api/v1/areas/<int:area_id>"

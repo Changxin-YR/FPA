@@ -1,6 +1,6 @@
 """找出让 `test_mysql_driver_is_confined_to_one_module` 失败的**真正原因**。
 
-该测试用 `ast.parse()` 逐个解析 `backend/fpa` 下的 .py；`_imported()` 没有捕获
+该测试用 `ast.parse()` 逐个解析 `backend/yuxin` 下的 .py；`_imported()` 没有捕获
 SyntaxError，所以**任何一个文件语法有误，这条"驱动隔离"断言就会失败**——
 报错信息会指向驱动，而真实原因在别人的文件里。这正是"报告的表象与根因不一致"。
 """
@@ -12,7 +12,7 @@ import os
 from pathlib import Path
 
 BACKEND = Path(__file__).resolve().parents[2] / "backend"
-PACKAGE = BACKEND / "fpa"
+PACKAGE = BACKEND / "yuxin"
 
 
 def python_files(root: Path):

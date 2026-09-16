@@ -7,9 +7,9 @@ from typing import Any
 
 import pytest
 
-from fpa.kernel.errors import DomainError, ErrorCode
-from fpa.kernel.idempotency import IdempotencyStore, Reservation
-from fpa.kernel.runner import ActorView, CapabilityRunner, Invocation
+from yuxin.kernel.errors import DomainError, ErrorCode
+from yuxin.kernel.idempotency import IdempotencyStore, Reservation
+from yuxin.kernel.runner import ActorView, CapabilityRunner, Invocation
 
 
 class _Tx:

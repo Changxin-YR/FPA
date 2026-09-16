@@ -1,8 +1,8 @@
 /**
- * FPA Gateway 的 HTTP 客户端（插件侧）。
+ * 渔芯 Gateway 的 HTTP 客户端（插件侧）。
  *
  * 契约来源：`docs/INTERFACES.md` §4「Harness ↔ Gateway 协议」（**冻结**）。
- * 服务端实现：`backend/fpa/agent/gateway.py`（`AgentToolGateway`）。
+ * 服务端实现：`backend/yuxin/agent/gateway.py`（`AgentToolGateway`）。
  *
  *   GET  {gatewayUrl}/tools                  → { code, data: { tools: [...] }, ... }
  *   POST {gatewayUrl}/tools/{tool_name}/call → { code, data: <TurnOutcome>, ... }
@@ -70,16 +70,16 @@ function isRecord(value: unknown): value is Record<string, unknown> {
  */
 export function resolveGatewayBase(gatewayUrl: string): string {
   const raw = (gatewayUrl ?? '').trim()
-  if (!raw) throw new GatewayConfigError('FPA Gateway 地址未配置')
+  if (!raw) throw new GatewayConfigError('渔芯 Gateway 地址未配置')
 
   let parsed: URL
   try {
     parsed = new URL(raw)
   } catch {
-    throw new GatewayConfigError(`FPA Gateway 地址无效：${raw}`)
+    throw new GatewayConfigError(`渔芯 Gateway 地址无效：${raw}`)
   }
   if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-    throw new GatewayConfigError(`FPA Gateway 只允许 HTTP(S) 地址，当前是 ${parsed.protocol}`)
+    throw new GatewayConfigError(`渔芯 Gateway 只允许 HTTP(S) 地址，当前是 ${parsed.protocol}`)
   }
   return parsed.toString().replace(/\/+$/, '')
 }
@@ -122,7 +122,7 @@ export function createGatewayClient(config: GatewayConfig): GatewayClient {
   const base = resolveGatewayBase(config.gatewayUrl)
   const contextToken = (config.contextToken ?? '').trim()
   if (!contextToken) {
-    throw new GatewayConfigError('缺少 FPA 上下文令牌（X-Agent-Context），拒绝以匿名身份注册工具')
+    throw new GatewayConfigError('缺少 渔芯上下文令牌（X-Agent-Context），拒绝以匿名身份注册工具')
   }
 
   function headers(extra?: Record<string, string>): Record<string, string> {
@@ -147,7 +147,7 @@ export function createGatewayClient(config: GatewayConfig): GatewayClient {
         })
       } catch (cause) {
         throw new GatewayUnavailableError(
-          `无法连接 FPA Gateway（${base}/tools）：${cause instanceof Error ? cause.message : String(cause)}`,
+          `无法连接 渔芯 Gateway（${base}/tools）：${cause instanceof Error ? cause.message : String(cause)}`,
           { cause },
         )
       }

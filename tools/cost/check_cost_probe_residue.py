@@ -12,8 +12,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "backend"))
 
 import pymysql  # noqa: E402
 
-CONFIG = dict(host="127.0.0.1", port=3306, user="fpa",
-              password="fpa_dev_password", database="fpa",
+CONFIG = dict(host="127.0.0.1", port=3306, user="yuxin",
+              password="yuxin_dev_password", database="yuxin",
               charset="utf8mb4", cursorclass=pymysql.cursors.DictCursor,
               autocommit=True)
 

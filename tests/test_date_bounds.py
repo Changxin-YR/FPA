@@ -33,7 +33,7 @@ import pytest
 
 from conftest import load_all_status
 
-from fpa.kernel.date_bounds import upper_bound  # noqa: E402  （conftest 已把 backend 注入 sys.path）
+from yuxin.kernel.date_bounds import upper_bound  # noqa: E402  （conftest 已把 backend 注入 sys.path）
 
 
 # ---------------------------------------------------------------------------
@@ -69,7 +69,7 @@ def test_空值必须在调用方被跳过_这里直接报错() -> None:
 
 
 def test_会计期间反查使用共享行锁协议() -> None:
-    from fpa.kernel.invariants import lock_period_for_date
+    from yuxin.kernel.invariants import lock_period_for_date
 
     tx = _RecordingTx()
     row = lock_period_for_date(tx, organization_id=9, occurred_on="2026-09-13")
@@ -109,8 +109,8 @@ class _RecordingTx:
 
 
 def _ctx():
-    from fpa.domains._base import Actor, ServiceContext
-    from fpa.kernel.scope import Scope
+    from yuxin.domains._base import Actor, ServiceContext
+    from yuxin.kernel.scope import Scope
 
     scope = Scope.all_data(user_id=1)
     return ServiceContext(
@@ -121,8 +121,8 @@ def _ctx():
 
 def test_审计的_created_to_在_SQL_里走_DATE_ADD() -> None:
     load_all_status()
-    from fpa.domains.audit.audit_logs import AuditLogService
-    from fpa.kernel.capability import REGISTRY
+    from yuxin.domains.audit.audit_logs import AuditLogService
+    from yuxin.kernel.capability import REGISTRY
 
     assert REGISTRY.find("audit.log.list") is not None, "审计列表能力未注册，本用例前提失效"
     tx = _RecordingTx()
@@ -136,7 +136,7 @@ def test_审计的_created_to_在_SQL_里走_DATE_ADD() -> None:
 def test_库存流水的_date_to_在_SQL_里走_DATE_ADD() -> None:
     """与审计同一条判据（两处实现必须收敛到同一处 —— 这是本文件最重要的一条）。"""
     source = Path(
-        inspect.getsourcefile(__import__("fpa.domains.warehouse.inventory", fromlist=["x"]))
+        inspect.getsourcefile(__import__("yuxin.domains.warehouse.inventory", fromlist=["x"]))
     ).read_text(encoding="utf-8")
     assert "upper_bound(" in source, (
         "`inventory_ledger.happened_at` 是 DATETIME 列，它的 date_to 必须走 "

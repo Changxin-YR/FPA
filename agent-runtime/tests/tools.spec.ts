@@ -3,10 +3,10 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { apply, CLARIFICATION_NOTE, PENDING_CONFIRMATION_NOTE } from '../src/index.ts'
 import { resolveGatewayBase, GatewayConfigError } from '../src/gateway.ts'
 
-const GATEWAY = 'https://fpa.example.com/api/v1/agent'
+const GATEWAY = 'https://yuxin.example.com/api/v1/agent'
 const TOKEN = 'ctx-token-abc123'
 
-/** 服务端下发的标准 JSON Schema（形状取自 `backend/fpa/kernel/capability.py:343-383`）。 */
+/** 服务端下发的标准 JSON Schema（形状取自 `backend/yuxin/kernel/capability.py:343-383`）。 */
 const CATALOG = {
   code: 'OK',
   message: '',
@@ -130,8 +130,8 @@ async function runTool(
 const originalFetch = globalThis.fetch
 
 beforeEach(() => {
-  delete process.env['FPA_AGENT_CONTEXT_TOKEN']
-  delete process.env['FPA_AGENT_GATEWAY_URL']
+  delete process.env['YUXIN_AGENT_CONTEXT_TOKEN']
+  delete process.env['YUXIN_AGENT_GATEWAY_URL']
 })
 
 afterEach(() => {
@@ -183,7 +183,7 @@ describe('工具清单拉取与注册', () => {
     const ctx = makeContext()
     await expect(
       apply(ctx as never, { gatewayUrl: GATEWAY, contextToken: TOKEN }),
-    ).rejects.toThrow(/无法连接 FPA Gateway/)
+    ).rejects.toThrow(/无法连接 渔芯 Gateway/)
   })
 })
 
@@ -321,7 +321,7 @@ describe('请求头与幂等键', () => {
 
     await runTool(ctx, 'feeding_verify', { feeding_id: 7, expected_version: 1 }, 'call-abc')
     const call = calls[calls.length - 1]
-    expect(call?.headers['Idempotency-Key']).toBe('fpa:feeding_verify:call-abc')
+    expect(call?.headers['Idempotency-Key']).toBe('yuxin:feeding_verify:call-abc')
   })
   it('rootCallId 是空串时仍然必须发键（线上 qwen-plus 的真实形态）', async () => {
     // 2026-09-15 线上实测：Harness + qwen-plus 的 tool_call **没有 id**，
@@ -343,7 +343,7 @@ describe('请求头与幂等键', () => {
     expect(key).toBeTruthy()
     // 服务端 `kernel/idempotency.py` 的格式契约：8–128 个 [A-Za-z0-9._:-]
     expect(key).toMatch(/^[A-Za-z0-9._:-]{8,128}$/)
-    expect(key?.startsWith('fpa:feeding_verify:')).toBe(true)
+    expect(key?.startsWith('yuxin:feeding_verify:')).toBe(true)
   })
 
   it('兜底键逐次唯一，不能把两次不同调用去重成一次', async () => {
@@ -402,18 +402,18 @@ describe('ask_user 工具', () => {
 
 describe('启动期校验', () => {
   it('网关地址非 http(s) 一律拒绝', () => {
-    expect(() => resolveGatewayBase('ftp://fpa.example.com')).toThrow(GatewayConfigError)
+    expect(() => resolveGatewayBase('ftp://yuxin.example.com')).toThrow(GatewayConfigError)
     expect(() => resolveGatewayBase('file:///etc/passwd')).toThrow(GatewayConfigError)
     expect(() => resolveGatewayBase('javascript:alert(1)')).toThrow(GatewayConfigError)
     expect(() => resolveGatewayBase('')).toThrow(GatewayConfigError)
-    expect(resolveGatewayBase('https://fpa.example.com/api/v1/agent/')).toBe(GATEWAY)
+    expect(resolveGatewayBase('https://yuxin.example.com/api/v1/agent/')).toBe(GATEWAY)
   })
 
   it('非 http(s) 地址让插件加载直接失败（不注册任何工具）', async () => {
     stubFetch(() => jsonResponse(CATALOG))
     const ctx = makeContext()
     await expect(
-      apply(ctx as never, { gatewayUrl: 'ftp://fpa.example.com', contextToken: TOKEN }),
+      apply(ctx as never, { gatewayUrl: 'ftp://yuxin.example.com', contextToken: TOKEN }),
     ).rejects.toThrow(/只允许 HTTP\(S\)/)
     expect(ctx.registered.length).toBe(0)
   })
@@ -428,11 +428,11 @@ describe('启动期校验', () => {
   })
 
   it('主动把凭据从子进程环境中清除（纵深防御）', async () => {
-    process.env['FPA_AGENT_CONTEXT_TOKEN'] = 'leaked-token'
-    process.env['FPA_AGENT_GATEWAY_URL'] = 'https://leaked.example.com'
+    process.env['YUXIN_AGENT_CONTEXT_TOKEN'] = 'leaked-token'
+    process.env['YUXIN_AGENT_GATEWAY_URL'] = 'https://leaked.example.com'
     stubFetch(() => jsonResponse(CATALOG))
     await apply(makeContext() as never, { gatewayUrl: GATEWAY, contextToken: TOKEN })
-    expect(process.env['FPA_AGENT_CONTEXT_TOKEN']).toBeUndefined()
-    expect(process.env['FPA_AGENT_GATEWAY_URL']).toBeUndefined()
+    expect(process.env['YUXIN_AGENT_CONTEXT_TOKEN']).toBeUndefined()
+    expect(process.env['YUXIN_AGENT_GATEWAY_URL']).toBeUndefined()
   })
 })

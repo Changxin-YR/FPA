@@ -6,7 +6,7 @@
 `SyntaxError`**。于是某个域文件里的一处坏注释（丢掉行首 `#`）让
 
     test_mysql_driver_is_confined_to_one_module  FAILED
-    AssertionError: MySQL 驱动只能出现在 fpa.kernel.uow；实测出现在：['fpa.domains.cost...
+    AssertionError: MySQL 驱动只能出现在 yuxin.kernel.uow；实测出现在：['yuxin.domains.cost...
 
 ——**驱动违规是假的**，真问题是另一个文件语法坏了。负责人 与 cost-dev 都被误导过。
 
@@ -59,5 +59,5 @@ def test_healthy_file_still_yields_its_imports() -> None:
 
 
 def test_module_name_maps_files_to_dotted_paths() -> None:
-    assert source_index.module_name(source_index.PACKAGE / "kernel" / "uow.py") == "fpa.kernel.uow"
-    assert source_index.module_name(source_index.PACKAGE / "web" / "__init__.py") == "fpa.web"
+    assert source_index.module_name(source_index.PACKAGE / "kernel" / "uow.py") == "yuxin.kernel.uow"
+    assert source_index.module_name(source_index.PACKAGE / "web" / "__init__.py") == "yuxin.web"

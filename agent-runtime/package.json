@@ -1,6 +1,6 @@
 {
-  "name": "@fpa/dsh-biz-tools",
-  "description": "FPA typed business tools for the DeepSeek Harness — one real tool per Capability, with real JSON Schema.",
+  "name": "@yuxin/dsh-biz-tools",
+  "description": "Yuxin typed business tools for the DeepSeek Harness — one real tool per Capability, with real JSON Schema.",
   "version": "0.1.0",
   "license": "MIT",
   "type": "module",

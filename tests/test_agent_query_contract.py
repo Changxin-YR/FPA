@@ -4,9 +4,9 @@ from typing import Any
 
 import pytest
 
-from fpa.agent.gateway import AgentToolGateway
-from fpa.kernel.audit import AuditWriter
-from fpa.kernel.capability import (
+from yuxin.agent.gateway import AgentToolGateway
+from yuxin.kernel.audit import AuditWriter
+from yuxin.kernel.capability import (
     AgentExposure,
     Capability,
     HandlerResult,
@@ -14,9 +14,9 @@ from fpa.kernel.capability import (
     Registry,
     Risk,
 )
-from fpa.kernel.errors import DomainError, ErrorCode
-from fpa.kernel.runner import ActorView, Invocation, InvocationResult
-from fpa.kernel.workflow import FilterKind, FilterSpec, RESOURCES, Resource
+from yuxin.kernel.errors import DomainError, ErrorCode
+from yuxin.kernel.runner import ActorView, Invocation, InvocationResult
+from yuxin.kernel.workflow import FilterKind, FilterSpec, RESOURCES, Resource
 
 
 def _list_handler(tx: Any, ctx: Any, scope: Any, query: dict[str, Any] | None = None) -> HandlerResult:

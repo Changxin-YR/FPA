@@ -12,7 +12,7 @@
 
 上一版把 `ROOT` 写成 `parents[1]`——那是 `tools/`，不是仓库根。后果：
 
-  1. 在 `tools/backend/fpa/domains/` 下**误建**探针目录，留下 `tools/backend/` 垃圾树；
+  1. 在 `tools/backend/yuxin/domains/` 下**误建**探针目录，留下 `tools/backend/` 垃圾树；
   2. 把"预检没抓住"判成失败，**而真相是它查的是另一个路径**；
   3. 报出的 exit=2 是解释器自身的用法错误，我却先归因到被调脚本上。
 
@@ -30,7 +30,7 @@ from pathlib import Path
 
 #: `tools/cost/<this file>` -> parents[0]=cost, [1]=tools, [2]=仓库根
 ROOT = Path(__file__).resolve().parents[2]
-PROBE_DIR = ROOT / "backend" / "fpa" / "domains" / "zz_preflight_probe"
+PROBE_DIR = ROOT / "backend" / "yuxin" / "domains" / "zz_preflight_probe"
 PYTHON = sys.executable
 
 #: 与真实事故同形：多行 import 语句中间插入裸代码 -> IndentationError
@@ -39,7 +39,7 @@ BROKEN = (
     "\n"
     "from __future__ import annotations\n"
     "\n"
-    "from fpa.kernel.capability import (\n"
+    "from yuxin.kernel.capability import (\n"
     '"""\n'
     "    AgentExposure,\n"
     "    Risk,\n"
@@ -57,9 +57,9 @@ def run_preflight() -> tuple[int, str]:
 
 def main() -> int:
     print(f"ROOT = {ROOT}")
-    if not (ROOT / "backend" / "fpa" / "bootstrap.py").exists() or \
+    if not (ROOT / "backend" / "yuxin" / "bootstrap.py").exists() or \
        not (ROOT / "tools" / "preflight.py").exists():
-        print("  FAIL  路径算错了：ROOT 下找不到 backend/fpa/bootstrap.py 或 tools/preflight.py")
+        print("  FAIL  路径算错了：ROOT 下找不到 backend/yuxin/bootstrap.py 或 tools/preflight.py")
         print("        （上一版就是这里错了一格，症状伪装成「预检没抓住」）")
         return 1
     print("  OK  路径自检通过\n")

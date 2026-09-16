@@ -32,8 +32,8 @@ import json
 
 import pytest
 
-from fpa.harness.session import executed_tool_calls, pending_confirmations
-from fpa.web.agent_turn import _frontend_url_of, _tool_name_index, executed_result
+from yuxin.harness.session import executed_tool_calls, pending_confirmations
+from yuxin.web.agent_turn import _frontend_url_of, _tool_name_index, executed_result
 
 
 def _tool_call(call_id: str, name: str, arguments: dict) -> dict:
@@ -99,10 +99,10 @@ READ_ONLY_TURN = [
 @pytest.fixture
 def registry():
     """真实组合根注册表（不是夹具注册表——夹具会盖住生产路径）。"""
-    from fpa.bootstrap import load_all
+    from yuxin.bootstrap import load_all
 
     load_all()
-    from fpa.kernel.capability import REGISTRY
+    from yuxin.kernel.capability import REGISTRY
 
     return REGISTRY
 

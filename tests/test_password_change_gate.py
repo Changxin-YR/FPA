@@ -25,7 +25,7 @@ import time
 
 import pytest
 
-from fpa.factory import build_app
+from yuxin.factory import build_app
 
 
 CODE = "qa-pwgate-test"
@@ -50,7 +50,7 @@ def _probe_grants() -> tuple[int, int]:
     cashier，而 `scope_id=2` 不存在）——那时测试撞的是"角色/范围不存在"，不是"强制改密"。
     `inspector` 持有 `purchase.view` / `pond.view`，能满足"改密后业务接口恢复 200"的断言。
     """
-    from fpa.kernel.uow_factory import connection_config
+    from yuxin.kernel.uow_factory import connection_config
 
     import pymysql
 
@@ -89,7 +89,7 @@ def _cleanup(app) -> None:  # noqa: ANN001, ANN201
     马上对不上（实测踩到过：跑完一轮变成 11 / 17）。探针只读业务接口、没有任何
     业务外键引用它，因此先清绑定、再删行是安全的。
     """
-    from fpa.kernel.uow_factory import connection_config
+    from yuxin.kernel.uow_factory import connection_config
 
     import pymysql
 

@@ -11,7 +11,7 @@
 
 ```powershell
 $env:PYTHONPATH='<repo>\backend'
-$env:MYSQL_USER='fpa'; $env:MYSQL_PASSWORD='fpa_dev_password'; $env:MYSQL_DATABASE='fpa'
+$env:MYSQL_USER='yuxin'; $env:MYSQL_PASSWORD='yuxin_dev_password'; $env:MYSQL_DATABASE='yuxin'
 
 python tools\preflight.py                 # 一秒：语法 / 逐模块 import / 组合根 / 格式门禁
 python -m pytest tests -q                 # 380 passed / 29 skipped

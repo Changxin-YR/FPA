@@ -52,7 +52,7 @@ def _handler_sets_resource_id(handler) -> bool:
 
 def test_读能力不得设置_resource_id():
     load_all_status()
-    from fpa.kernel.capability import REGISTRY
+    from yuxin.kernel.capability import REGISTRY
 
     reads = [c for c in REGISTRY.all() if c.kind == "read"]
     # 空集不得当成通过：先证明真的扫到了读能力。

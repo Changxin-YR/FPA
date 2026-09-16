@@ -19,7 +19,7 @@ MySQL 单表 UPDATE 的赋值**从左到右**求值 —— 第二条 SET 里的 
 
 ## 判据
 
-扫描 `backend/fpa` 下所有字符串字面量里的 `UPDATE … SET`：若第 i 项赋值的列名
+扫描 `backend/yuxin` 下所有字符串字面量里的 `UPDATE … SET`：若第 i 项赋值的列名
 **又出现在第 j（j>i）项的表达式里**，即判红。这与"哪张表、哪一列"无关，是**类级**
 判据：即使换成 `stock = stock - n, flag = IF(stock > 0, …)` 也照样抓得住。
 
@@ -40,7 +40,7 @@ import os
 import re
 from pathlib import Path
 
-_BACKEND_FPA = Path(__file__).resolve().parents[1] / "backend" / "fpa"
+_BACKEND_YUXIN = Path(__file__).resolve().parents[1] / "backend" / "yuxin"
 
 #: 目录级剪枝（禁用 rglob：全盘递归会进 __pycache__ 之类）。
 _SKIP_DIRS = {"__pycache__", ".mypy_cache", ".ruff_cache"}
@@ -102,7 +102,7 @@ def _scan() -> tuple[list[str], int, int]:
     findings: list[str] = []
     updates = 0
     files = 0
-    for directory, dirnames, filenames in os.walk(_BACKEND_FPA):
+    for directory, dirnames, filenames in os.walk(_BACKEND_YUXIN):
         dirnames[:] = [d for d in dirnames if d not in _SKIP_DIRS]
         for name in filenames:
             if not name.endswith(".py"):
@@ -126,7 +126,7 @@ def _scan() -> tuple[list[str], int, int]:
                         for later_column, later_expr in assigned[index + 1:]:
                             if column in set(_IDENT.findall(later_expr)):
                                 findings.append(
-                                    f"{path.relative_to(_BACKEND_FPA.parents[1])}: "
+                                    f"{path.relative_to(_BACKEND_YUXIN.parents[1])}: "
                                     f"SET 第 {index + 1} 项给 `{column}` 赋值，"
                                     f"第 {index + 2} 项（`{later_column}`）又读了它"
                                     f" —— MySQL 从左到右求值，读到的已是新值。"

@@ -35,9 +35,9 @@ from typing import Any
 
 import pytest
 
-from fpa.kernel import capability as cap
-from fpa.kernel.errors import DomainError
-from fpa.kernel.fields import FieldSet, f_int
+from yuxin.kernel import capability as cap
+from yuxin.kernel.errors import DomainError
+from yuxin.kernel.fields import FieldSet, f_int
 
 #: 处理器**实际收到**的参数。模块级可变容器——让断言读真实调用结果，
 #: 而不是读我们以为会发生的事情。
@@ -185,10 +185,10 @@ def test_runner_actually_passes_expected_version_to_the_handler() -> None:
 
     这是唯一能抓住"字段表看起来对、值却没传下去"那种静默失效的形态。
     """
-    from fpa.kernel.audit import AuditWriter
-    from fpa.kernel.idempotency import IdempotencyStore
-    from fpa.kernel.runner import ActorView, CapabilityRunner, Invocation
-    from fpa.kernel.scope import Scope
+    from yuxin.kernel.audit import AuditWriter
+    from yuxin.kernel.idempotency import IdempotencyStore
+    from yuxin.kernel.runner import ActorView, CapabilityRunner, Invocation
+    from yuxin.kernel.scope import Scope
 
     registry = cap.Registry()
     registry.register(
@@ -251,8 +251,8 @@ def test_real_action_capabilities_declare_expected_version() -> None:
     """
     import importlib
 
-    from fpa.bootstrap import _module_name, discover_domains
-    from fpa.kernel.capability import REGISTRY
+    from yuxin.bootstrap import _module_name, discover_domains
+    from yuxin.kernel.capability import REGISTRY
 
     skipped: list[str] = []
     for domain in discover_domains():

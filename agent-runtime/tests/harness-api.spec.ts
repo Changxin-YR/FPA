@@ -55,7 +55,7 @@ describe.skipIf(!present)('与真实 Harness 产物的一致性', () => {
   })
 
   it('本地替身的投影语义与真实实现一致（往返保真）', () => {
-    // 服务端真实下发的形状（backend/fpa/kernel/capability.py:343-383）
+    // 服务端真实下发的形状（backend/yuxin/kernel/capability.py:343-383）
     const serverSchema = {
       type: 'object',
       additionalProperties: false,

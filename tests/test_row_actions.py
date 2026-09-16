@@ -45,9 +45,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import fpa.bootstrap as bootstrap
-from fpa.kernel.capability import REGISTRY
-from fpa.kernel.workflow import RESOURCES, RowAction
+import yuxin.bootstrap as bootstrap
+from yuxin.kernel.capability import REGISTRY
+from yuxin.kernel.workflow import RESOURCES, RowAction
 
 _bootstrap_done = False
 
@@ -87,7 +87,7 @@ def _load_once() -> None:
     import importlib
 
     for domain in bootstrap.discover_domains():
-        module_name = f"fpa.domains.{domain}.capabilities"
+        module_name = f"yuxin.domains.{domain}.capabilities"
         try:
             importlib.import_module(module_name)
         except Exception as error:  # noqa: BLE001 - 见 docstring：故意收口
@@ -156,7 +156,7 @@ def _declared_capability_names() -> set[str]:
     尤其在目标域还没落盘、或此刻正处于编辑中间态而没有装载进来时。
     （实测：warehouse 的能力声明文件尚未生效时，采购的 3 条转移全部被误报。）
 
-    所以这里从**源码声明**取名字：`backend/fpa/domains/**/*.py` 里所有
+    所以这里从**源码声明**取名字：`backend/yuxin/domains/**/*.py` 里所有
     `name="xxx.yyy"` 字面量。它反映"**有人声明过这个名字**"，而不是"此刻恰好
     装载成功"。两者对这条断言的意义不同 —— 本断言要防的是**拼写错误**
     （`receipt.varify`），不是"目标域还没实现"。
@@ -169,7 +169,7 @@ def _declared_capability_names() -> set[str]:
     import ast
     import os
 
-    backend = Path(__file__).resolve().parents[1] / "backend" / "fpa"
+    backend = Path(__file__).resolve().parents[1] / "backend" / "yuxin"
     names: set[str] = set()
     for dirpath, dirnames, filenames in os.walk(backend):
         dirnames[:] = sorted(name for name in dirnames if name != "__pycache__")
@@ -313,7 +313,7 @@ def test_reserved_field_is_available() -> None:
     """
     from dataclasses import fields
 
-    from fpa.kernel.workflow import State
+    from yuxin.kernel.workflow import State
 
     has_field = any(item.name == "reserved" for item in fields(State))
     if has_field:
@@ -684,7 +684,7 @@ def test_selectable_excludes_terminal_and_reserved() -> None:
     判据因此必须是 `!terminal && !reserved`，而且只能有**一处**实现
     （服务端属性 + `to_meta()` 下发的布尔值）——前端各处各写一遍就是第二处实现。
     """
-    from fpa.kernel.workflow import State, Tone, Workflow
+    from yuxin.kernel.workflow import State, Tone, Workflow
 
     workflow = Workflow(
         resource="selectable_probe",
@@ -724,7 +724,7 @@ def test_selectable_is_used_by_every_filter_whitelist() -> None:
     import ast
     from pathlib import Path as _Path
 
-    root = _Path(__file__).resolve().parents[1] / "backend" / "fpa" / "domains"
+    root = _Path(__file__).resolve().parents[1] / "backend" / "yuxin" / "domains"
     offenders: list[str] = []
     for path in sorted(root.rglob("*.py")):
         try:
@@ -770,7 +770,7 @@ def test_every_row_action_has_a_chinese_label() -> None:
     但它会让"漏了标签"从**编译期问题**退化成**显示问题**。
     所以这条断言把它拉回构建期：**每个动作词都必须有标签**。
     """
-    from fpa.kernel.workflow import ACTION_LABELS, RowAction
+    from yuxin.kernel.workflow import ACTION_LABELS, RowAction
 
     missing = sorted(str(item) for item in RowAction if str(item) not in ACTION_LABELS)
     assert missing == [], (
@@ -792,7 +792,7 @@ def test_row_action_labels_are_not_empty_and_chinese() -> None:
     """
     import re
 
-    from fpa.kernel.workflow import ACTION_LABELS
+    from yuxin.kernel.workflow import ACTION_LABELS
 
     bad: list[str] = []
     for action, label in ACTION_LABELS.items():
@@ -809,8 +809,8 @@ def test_actions_metadata_exposes_labels() -> None:
     这条是"落点存在"的机械判据：前端曾经因为元数据里没有标签，
     只好自己硬编码或渲染 token。少了 `row_action_labels`，前端就只能又猜一遍。
     """
-    from fpa.kernel.workflow import RowAction
-    from fpa.web.workflow_meta import actions_payload
+    from yuxin.kernel.workflow import RowAction
+    from yuxin.web.workflow_meta import actions_payload
 
     payload = actions_payload()
     assert set(payload) >= {"tones", "row_actions", "row_action_labels"}, sorted(payload)
@@ -823,8 +823,8 @@ def test_actions_metadata_exposes_labels() -> None:
 
 def test_admin_row_actions_have_chinese_labels() -> None:
     """账号与角色页的管理动作也必须走服务端统一标签链路。"""
-    from fpa.kernel.workflow import row_action_label
-    from fpa.web.workflow_meta import actions_payload
+    from yuxin.kernel.workflow import row_action_label
+    from yuxin.web.workflow_meta import actions_payload
 
     expected = {
         "status": "启用/禁用",

@@ -78,7 +78,7 @@
 ## 2. 分层与边界
 
 ```
-FPA/
+yuxin/
 ├─ backend/
 │  ├─ kernel/            # 与框架无关，HTTP 零依赖，可脱离 Flask 测试
 │  │   ├─ errors.py      # 唯一异常类型 + 错误码枚举（唯一注册表）
@@ -246,7 +246,7 @@ Agent Gateway (/api/v1/agent/tools/{name}/call)
 |---|---|---|
 | 单把 `RLock` 罩住整个 `harness.run`，配合 `gunicorn --workers 2 --threads 2` → 每 worker 同时只能跑 1 个智能体回合 | `harness_sidecar.py` 的 `with self._lock:` + 90s 超时 | **子进程池**，按 session 亲和分配；并发度可配，锁只保护池的记账 |
 | 每轮丢弃子进程重建（`context_token` 存在即 `_cache.drop(namespace)`） | 同上 | 会话亲和 + 令牌轮换不重建进程；令牌绑定改由 Gateway 校验 |
-| 工具目录塞进进程环境变量（`FPA_AGENT_TOOL_CATALOG`），注释自承"为绕开 Windows 环境变量上限" | `build_agent_tool_catalog()` | **正规插件包**：工具 schema 由插件启动时从 Gateway 拉取（`GET /api/v1/agent/tools`），不经过环境变量 |
+| 工具目录塞进进程环境变量（`YUXIN_AGENT_TOOL_CATALOG`），注释自承"为绕开 Windows 环境变量上限" | `build_agent_tool_catalog()` | **正规插件包**：工具 schema 由插件启动时从 Gateway 拉取（`GET /api/v1/agent/tools`），不经过环境变量 |
 
 ### 5.5 工具粒度
 
@@ -283,7 +283,7 @@ feeding.create{ pond_id: integer!, batch_id: integer!, material_id: integer!, qu
 | 同一状态三种中文（`verified` → 待确认/已核验/已提交） | 14 处独立字面量 | 后端单一状态字典，前端只取 `{label, tone}` |
 | 状态色表键风格两套（中文键 vs 状态码键），跨文件复用后静默全灰 | `returnModel.ts:43` | tone 用状态码联合类型，编译期约束 |
 | 三处裸 `fetch` 绕过统一客户端 | `data-exchange.service.ts:44/60/79` | 全部走单例客户端 |
-| `dist` 引用 `/assets/` 而部署路径是 `/fpa/` | 直接部署白屏；CI 只跑默认 base | 构建脚本强制 `VITE_PUBLIC_BASE_PATH`，CI 增加带 base 的构建断言 |
+| `dist` 引用 `/assets/` 而部署路径是 `/yuxin/` | 直接部署白屏；CI 只跑默认 base | 构建脚本强制 `VITE_PUBLIC_BASE_PATH`，CI 增加带 base 的构建断言 |
 | 15/53 页面无任何测试；`router.ts` 守卫链在单测中完全未执行 | 单测用假路由表 | 守卫链必须有针对性测试 |
 | 前端无覆盖率工具也无门槛（后端有 `--cov-fail-under=85`） | | 引入覆盖率与门槛 |
 | 无 ESLint / Prettier | | 引入 |

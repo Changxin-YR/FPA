@@ -11,7 +11,7 @@
 
 ## 测什么
 
-在一个**探针库**（不是 `fpa`！）上做三件事，每件都必须被检出：
+在一个**探针库**（不是 `yuxin`！）上做三件事，每件都必须被检出：
 
   1. **列类型被改**（`varchar(32)` -> `varchar(64)`）—— 对应当前迭代真实漂移的形态；
   2. **CHECK 被删** —— 对应 004 那次"ENUM -> VARCHAR+CHECK"漂移；
@@ -22,7 +22,7 @@
   4. 探针库**刚建好时**必须返回 0（否则它恒报红，同样没信息量）；
   5. 恢复后必须**再次**返回 0（证明红→绿是数据驱动的，不是一次性粘住）。
 
-只碰探针库 `fpa_schema_parity_selftest`；跑完删除。**`fpa` 全程只读。**
+只碰探针库 `yuxin_schema_parity_selftest`；跑完删除。**`yuxin` 全程只读。**
 """
 
 from __future__ import annotations
@@ -39,7 +39,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 
 from migrate import split_statements  # noqa: E402
 
-PROBE = "fpa_schema_parity_selftest"
+PROBE = "yuxin_schema_parity_selftest"
 TOOL = ROOT / "tools" / "schema_parity.py"
 FAILURES = 0
 
@@ -83,12 +83,12 @@ def build_probe() -> None:
         cursor.execute(
             f"CREATE DATABASE `{PROBE}` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
         )
-        cursor.execute(f"GRANT ALL PRIVILEGES ON `{PROBE}`.* TO 'fpa'@'%'")
+        cursor.execute(f"GRANT ALL PRIVILEGES ON `{PROBE}`.* TO 'yuxin'@'%'")
         cursor.execute("FLUSH PRIVILEGES")
     root.close()
 
     connection = pymysql.connect(
-        host="127.0.0.1", port=3306, user="fpa", password="fpa_dev_password",
+        host="127.0.0.1", port=3306, user="yuxin", password="yuxin_dev_password",
         database=PROBE, charset="utf8mb4", cursorclass=pymysql.cursors.DictCursor,
     )
     from migrate import MIGRATIONS_DIR
@@ -103,7 +103,7 @@ def build_probe() -> None:
 
 def probe_execute(statements: tuple[str, ...]) -> None:
     connection = pymysql.connect(
-        host="127.0.0.1", port=3306, user="fpa", password="fpa_dev_password",
+        host="127.0.0.1", port=3306, user="yuxin", password="yuxin_dev_password",
         database=PROBE, charset="utf8mb4", cursorclass=pymysql.cursors.DictCursor,
     )
     try:
@@ -204,7 +204,7 @@ def main() -> int:
     drop_probe()
     print()
     print("全部通过" if not FAILURES else f"{FAILURES} 项失败")
-    print(f"（探针库 {PROBE} 已删除；fpa 全程只读）")
+    print(f"（探针库 {PROBE} 已删除；yuxin 全程只读）")
     return 1 if FAILURES else 0
 
 

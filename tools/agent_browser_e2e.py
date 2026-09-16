@@ -39,7 +39,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 FRONTEND = ROOT / "frontend"
 
-FRONTEND_URL = os.environ.get("FPA_FRONTEND_URL", "http://127.0.0.1:5273")
+FRONTEND_URL = os.environ.get("YUXIN_FRONTEND_URL", "http://127.0.0.1:5273")
 DEMO_USER = "demo"
 DEMO_PASSWORD = "Demo1234!"
 
@@ -58,10 +58,10 @@ def _script() -> str:
     return r"""
 const { chromium } = require('playwright')
 
-const FRONTEND = process.env.FPA_FRONTEND_URL
-const USER = process.env.FPA_DEMO_USER
-const PASSWORD = process.env.FPA_DEMO_PASSWORD
-const PROMPT = process.env.FPA_AGENT_PROMPT
+const FRONTEND = process.env.YUXIN_FRONTEND_URL
+const USER = process.env.YUXIN_DEMO_USER
+const PASSWORD = process.env.YUXIN_DEMO_PASSWORD
+const PROMPT = process.env.YUXIN_AGENT_PROMPT
 
 ;(async () => {
   const out = { loginError: null, hasLauncher: false, reply: '', panelError: '', messages: [], consoleErrors: [] }
@@ -165,14 +165,14 @@ def main() -> int:
         return 2
 
     prompt = os.environ.get(
-        "FPA_AGENT_PROMPT", "你好，请用一句话回复：你是谁？不要调用任何工具。"
+        "YUXIN_AGENT_PROMPT", "你好，请用一句话回复：你是谁？不要调用任何工具。"
     )
     env = dict(os.environ)
     env.update(
-        FPA_FRONTEND_URL=FRONTEND_URL,
-        FPA_DEMO_USER=DEMO_USER,
-        FPA_DEMO_PASSWORD=DEMO_PASSWORD,
-        FPA_AGENT_PROMPT=prompt,
+        YUXIN_FRONTEND_URL=FRONTEND_URL,
+        YUXIN_DEMO_USER=DEMO_USER,
+        YUXIN_DEMO_PASSWORD=DEMO_PASSWORD,
+        YUXIN_AGENT_PROMPT=prompt,
     )
     proc = subprocess.run(
         ["node", "-e", _script()],

@@ -58,7 +58,7 @@ READERS = {
 
 def test_写路径不得内调带权限检查的读入口():
     load_all_status()
-    from fpa.domains.sales import deliveries_write
+    from yuxin.domains.sales import deliveries_write
 
     problems: list[str] = []
     for class_name, method_name, forbidden, _permission in CASES:
@@ -74,7 +74,7 @@ def test_写路径不得内调带权限检查的读入口():
 def test_读入口必须仍然校验自己的权限():
     """反向的一半：修 403 不能靠"把读权限删掉"。"""
     load_all_status()
-    from fpa.domains.sales import sales_orders
+    from yuxin.domains.sales import sales_orders
 
     for _class_name, _method_name, entry, permission in CASES:
         service = getattr(sales_orders, READERS[entry])
@@ -87,7 +87,7 @@ def test_读入口必须仍然校验自己的权限():
 
 def test_写路径共用的拼装函数不得做权限检查():
     load_all_status()
-    from fpa.domains.sales.sales_orders import DeliveryService, SalesReceiptService
+    from yuxin.domains.sales.sales_orders import DeliveryService, SalesReceiptService
 
     for service, helper in ((DeliveryService, "_delivery_detail"),
                             (SalesReceiptService, "_receipt_detail")):

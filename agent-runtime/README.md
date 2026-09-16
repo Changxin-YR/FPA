@@ -1,12 +1,12 @@
-# @fpa/dsh-biz-tools
+# @yuxin/dsh-biz-tools
 
 把 渔芯的业务能力注册成 **DeepSeek Harness 的类型化工具**：**每一条能力一个真工具、真 JSON Schema**。
 
 ## 它解决什么问题
 
-早期实现（`deepseek-harness-master/packages/extensions/fpa-agent-tools/src/index.ts`，3 KB）只注册两个
+早期实现（`deepseek-harness-master/packages/extensions/yuxin-agent-tools/src/index.ts`，3 KB）只注册两个
 **元工具** `biz_query` / `biz_mutation`，把全部业务操作名塞进一段长 `description` 字符串里让模型去挑，
-工具目录还塞进 `FPA_AGENT_TOOL_CATALOG` 环境变量（源码注释自承是为绕开 Windows 进程环境变量上限）。
+工具目录还塞进 `YUXIN_AGENT_TOOL_CATALOG` 环境变量（源码注释自承是为绕开 Windows 进程环境变量上限）。
 
 本实现：
 
@@ -67,7 +67,7 @@
 ### 保真度：哪些约束无法承载
 
 紧凑 spec **没有** `maxLength` / `minimum` / `maximum` / `pattern` 这些槽位，而服务端**确实会下发**它们
-（`backend/fpa/kernel/capability.py:354-360,369-374`、`backend/fpa/kernel/fields.py:125-127`）。
+（`backend/yuxin/kernel/capability.py:354-360,369-374`、`backend/yuxin/kernel/fields.py:125-127`）。
 三种处置里，静默丢弃会丢信息、直接抛错会让每条真实 schema 都注册失败，因此选择**折叠进 `description`**：
 模型仍能看到约束，而**服务端始终是校验权威**（`WRITE_CONTRACT.md`：校验在第 1 步，失败即 `failed`，什么都没写）。
 `fully unsupported` 的构造（`$ref` / `allOf` / `anyOf` / `not` / `if-then-else` …）**一律抛错**，不静默降级。

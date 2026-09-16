@@ -47,7 +47,7 @@
 | `INTERNAL_ERROR` | 500 | 未预期错误；必须带 `request_id` 供排查 |
 | `SERVICE_UNAVAILABLE` | 503 | 依赖服务暂时不可用 |
 
-共 **23** 个错误码。这张表由 `tools/gen_contract_docs.py` 从 `backend/fpa/kernel/errors.py` 生成，**不要手工编辑**——CI 会校验它与内核逐字节一致。
+共 **23** 个错误码。这张表由 `tools/gen_contract_docs.py` 从 `backend/yuxin/kernel/errors.py` 生成，**不要手工编辑**——CI 会校验它与内核逐字节一致。
 <!-- END GENERATED: error-codes -->
 
 <!-- BEGIN GENERATED: tone-and-actions -->
@@ -359,7 +359,7 @@
 }
 ```
 
-> **为什么走这个接口而不是环境变量**：早期版本把工具目录 JSON 塞进 `FPA_AGENT_TOOL_CATALOG` 环境变量，源码注释自承"为绕开 Windows 进程环境变量上限"。新系统工具 schema 从 HTTP 拉取。
+> **为什么走这个接口而不是环境变量**：早期版本把工具目录 JSON 塞进 `YUXIN_AGENT_TOOL_CATALOG` 环境变量，源码注释自承"为绕开 Windows 进程环境变量上限"。新系统工具 schema 从 HTTP 拉取。
 
 ### `POST /api/v1/agent/tools/{tool_name}/call`
 

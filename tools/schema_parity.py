@@ -40,11 +40,11 @@
 
 ## 用法
 
-    $env:MYSQL_USER='fpa'; $env:MYSQL_PASSWORD='fpa_dev_password'
-    python tools\\schema_parity.py                      # 比对 fpa
+    $env:MYSQL_USER='yuxin'; $env:MYSQL_PASSWORD='yuxin_dev_password'
+    python tools\\schema_parity.py                      # 比对 yuxin
     python tools\\schema_parity.py --only cost_entries  # 只比指定的表
     python tools\\schema_parity.py --verbose            # 每张表都打印一行结论
-    python tools\\schema_parity.py --temp fpa_parity_keep --keep   # 留现场排查
+    python tools\\schema_parity.py --temp yuxin_parity_keep --keep   # 留现场排查
 
 自检（证明它真的会红，而不是"永远返回 0"）：
 
@@ -171,7 +171,7 @@ def app_connect(database: str, args: argparse.Namespace):
     return pymysql.connect(
         host=args.host,
         port=args.port,
-        user=os.environ.get("MYSQL_USER", "fpa"),
+        user=os.environ.get("MYSQL_USER", "yuxin"),
         password=os.environ.get("MYSQL_PASSWORD", ""),
         database=database,
         charset="utf8mb4",
@@ -204,7 +204,7 @@ def build_temp(args: argparse.Namespace) -> tuple[object, int]:
         # 应用账号被刻意隔离在单库内，需要显式授权才能进临时库。
         # 不能用参数占位符 —— MySQL 的 `GRANT ... TO` 不接受预处理参数，只能拼字符串；
         # 库名与用户名都来自本次运行的参数/环境变量，不是外部输入。
-        app_user = os.environ.get("MYSQL_USER", "fpa")
+        app_user = os.environ.get("MYSQL_USER", "yuxin")
         cursor.execute(f"GRANT ALL PRIVILEGES ON `{args.temp}`.* TO '{app_user}'@'%'")
         cursor.execute("FLUSH PRIVILEGES")
     admin.close()
@@ -314,9 +314,9 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="真库形状 vs 迁移文件 逐表比对（migrate verify 的盲区补丁）"
     )
-    parser.add_argument("--target", default=os.environ.get("MYSQL_DATABASE", "fpa"),
-                        help="要比对的目标库（默认 fpa，**只读**）")
-    parser.add_argument("--temp", default="fpa_schema_parity_probe",
+    parser.add_argument("--target", default=os.environ.get("MYSQL_DATABASE", "yuxin"),
+                        help="要比对的目标库（默认 yuxin，**只读**）")
+    parser.add_argument("--temp", default="yuxin_schema_parity_probe",
                         help="用于从零跑迁移的临时库（用完删除）")
     parser.add_argument("--only", action="append", default=None,
                         help="只比指定的表（可重复；默认全部）")

@@ -41,7 +41,7 @@ ACCESS_CAPABILITIES = (
 
 def test_提权能力都声明了可读化解析器():
     load_all_status()
-    from fpa.kernel.capability import REGISTRY
+    from yuxin.kernel.capability import REGISTRY
 
     missing = [
         name for name in ACCESS_CAPABILITIES
@@ -56,7 +56,7 @@ def test_提权能力都声明了可读化解析器():
 def test_列表与字典值不得渲染成_python_字面量():
     """`str([9])` → `'[9]'`：卡片上出现的是**编程语言的语法**，不是业务值。"""
     load_all_status()
-    from fpa.kernel.capability import (
+    from yuxin.kernel.capability import (
         Capability,
         Confirmation,
         Field,
@@ -64,7 +64,7 @@ def test_列表与字典值不得渲染成_python_字面量():
         HttpMethod,
         Risk,
     )
-    from fpa.kernel.confirmation import ConfirmationGate
+    from yuxin.kernel.confirmation import ConfirmationGate
 
     capability = Capability(
         name="probe.card.render",
@@ -99,8 +99,8 @@ def test_列表与字典值不得渲染成_python_字面量():
 
 def test_提权能力的_impact_必须写明是权限变更():
     load_all_status()
-    from fpa.kernel.capability import REGISTRY
-    from fpa.kernel.runner import CapabilityRunner
+    from yuxin.kernel.capability import REGISTRY
+    from yuxin.kernel.runner import CapabilityRunner
 
     for name in ACCESS_CAPABILITIES:
         text = "".join(CapabilityRunner._impact_of(REGISTRY.get(name)))
@@ -146,7 +146,7 @@ class _FakeTx:
 def test_解析器把裸_id_换成业务名字():
     """行为层：id（7 / [9] / [2]）必须变成名字，而不是原样留在卡上。"""
     load_all_status()
-    from fpa.domains.access.admin import confirmation_labels
+    from yuxin.domains.access.admin import confirmation_labels
 
     tx = _FakeTx()
     labels = confirmation_labels(

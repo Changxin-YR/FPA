@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import pytest
 
-from fpa.kernel.capability import (
+from yuxin.kernel.capability import (
     Capability,
     HandlerResult,
     HttpMethod,
@@ -25,9 +25,9 @@ from fpa.kernel.capability import (
     REGISTRY,
     Risk,
 )
-from fpa.kernel.fields import f_str
+from yuxin.kernel.fields import f_str
 
-import fpa.bootstrap as bootstrap
+import yuxin.bootstrap as bootstrap
 
 #: 直接 import 那三条断言，而不是在本地复制一份。
 #:
@@ -39,7 +39,7 @@ import importlib.util as _importlib_util
 from pathlib import Path as _Path
 
 _ARCH_PATH = _Path(__file__).resolve().parent / "test_architecture.py"
-_SPEC = _importlib_util.spec_from_file_location("_fpa_test_architecture", _ARCH_PATH)
+_SPEC = _importlib_util.spec_from_file_location("_yuxin_test_architecture", _ARCH_PATH)
 assert _SPEC is not None and _SPEC.loader is not None
 _ARCH = _importlib_util.module_from_spec(_SPEC)
 _SPEC.loader.exec_module(_ARCH)
@@ -163,7 +163,7 @@ def test_no_loader_marker_is_accepted(injected) -> None:
 
 def test_declared_loader_is_accepted(injected) -> None:
     add, track = injected
-    track(_do_action, "__fpa_load_by_id__")
+    track(_do_action, "__yuxin_load_by_id__")
     add(_write_capability("probe.with_loader", _do_action, loader=_load_row))
 
     declares_loader()
@@ -176,10 +176,10 @@ def test_declared_loader_is_accepted(injected) -> None:
 
 def test_manual_attach_conflicting_with_loader_is_rejected(injected) -> None:
     add, track = injected
-    track(_do_action, "__fpa_load_by_id__")
+    track(_do_action, "__yuxin_load_by_id__")
     # 先注册一条带 loader 的，把 _load_row 挂上去；再手工改成 _load_other 模拟不一致
     add(_write_capability("probe.ambiguous_a", _do_action, loader=_load_row))
-    _do_action.__fpa_load_by_id__ = _load_other  # type: ignore[attr-defined]
+    _do_action.__yuxin_load_by_id__ = _load_other  # type: ignore[attr-defined]
 
     message = _failure_message(not_ambiguous)
     assert "probe.ambiguous_a" in message, message
@@ -188,10 +188,10 @@ def test_manual_attach_conflicting_with_loader_is_rejected(injected) -> None:
 
 def test_no_loader_plus_attached_loader_is_rejected(injected) -> None:
     add, track = injected
-    track(_do_action, "__fpa_load_by_id__")
+    track(_do_action, "__yuxin_load_by_id__")
     add(_write_capability("probe.ambiguous_b", _do_action, loader=NO_LOADER))
     # 手工再挂一个回读函数 —— 与 NO_LOADER 互相否定
-    _do_action.__fpa_load_by_id__ = _load_other  # type: ignore[attr-defined]
+    _do_action.__yuxin_load_by_id__ = _load_other  # type: ignore[attr-defined]
 
     message = _failure_message(not_ambiguous)
     assert "probe.ambiguous_b" in message, message
@@ -205,7 +205,7 @@ def test_no_loader_plus_attached_loader_is_rejected(injected) -> None:
 
 def test_read_capability_declaring_loader_is_rejected(injected) -> None:
     add, track = injected
-    track(_do_read, "__fpa_load_by_id__")
+    track(_do_read, "__yuxin_load_by_id__")
     add(_read_capability("probe.read_bad", _do_read, loader=_load_row))
 
     message = _failure_message(only_where_usable)

@@ -25,13 +25,13 @@ success。这是 `docs/WRITE_CONTRACT.md` 规则 2 的可执行形态。
 ## 为什么不用夹具注册表
 
 `tools/web_e2e.py` 的 `build_registry()` 是手搓的夹具（只注册一条能力）。
-本测试走 **`fpa.bootstrap.load_all()` 的真实组合根**——即生产代码路径上真正
+本测试走 **`yuxin.bootstrap.load_all()` 的真实组合根**——即生产代码路径上真正
 装载的那 5 条 cost 能力。夹具测试再绿也证明不了真实声明是对的
 （DEVELOPMENT.md 记过这个坑：夹具注册表曾让七套自检全绿而实际能力一条都没装载）。
 
 用法::
 
-    $env:MYSQL_USER='fpa'; $env:MYSQL_PASSWORD='fpa_dev_password'
+    $env:MYSQL_USER='yuxin'; $env:MYSQL_PASSWORD='yuxin_dev_password'
     python tools/cost_e2e.py
 """
 
@@ -46,13 +46,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
 
 import pymysql  # noqa: E402
 
-from fpa.bootstrap import load_all  # noqa: E402,F401 - 见 _load_cost_capabilities 的说明
-from fpa.kernel.audit import AuditWriter  # noqa: E402
-from fpa.kernel.errors import DomainError, ErrorCode  # noqa: E402
-from fpa.kernel.idempotency import IdempotencyStore  # noqa: E402
-from fpa.kernel.runner import ActorView, CapabilityRunner, Invocation  # noqa: E402
-from fpa.kernel.scope import Scope  # noqa: E402
-from fpa.kernel.uow import ConnectionConfig, UnitOfWork  # noqa: E402
+from yuxin.bootstrap import load_all  # noqa: E402,F401 - 见 _load_cost_capabilities 的说明
+from yuxin.kernel.audit import AuditWriter  # noqa: E402
+from yuxin.kernel.errors import DomainError, ErrorCode  # noqa: E402
+from yuxin.kernel.idempotency import IdempotencyStore  # noqa: E402
+from yuxin.kernel.runner import ActorView, CapabilityRunner, Invocation  # noqa: E402
+from yuxin.kernel.scope import Scope  # noqa: E402
+from yuxin.kernel.uow import ConnectionConfig, UnitOfWork  # noqa: E402
 
 FAILURES = 0
 
@@ -126,9 +126,9 @@ def _config() -> ConnectionConfig:
     return ConnectionConfig(
         host=os.environ.get("MYSQL_HOST", "127.0.0.1"),
         port=int(os.environ.get("MYSQL_PORT", "3306")),
-        user=os.environ.get("MYSQL_USER", "fpa"),
+        user=os.environ.get("MYSQL_USER", "yuxin"),
         password=os.environ.get("MYSQL_PASSWORD", ""),
-        database=os.environ.get("MYSQL_DATABASE", "fpa"),
+        database=os.environ.get("MYSQL_DATABASE", "yuxin"),
     )
 
 
@@ -206,7 +206,7 @@ def _load_cost_capabilities():
 
     ## 为什么要包一层（而且这层不是"测试偷懒"）
 
-    `fpa.bootstrap.load_all()` 会逐个 import **每个域的 `capabilities.py`**，
+    `yuxin.bootstrap.load_all()` 会逐个 import **每个域的 `capabilities.py`**，
     任何一个域在导入期抛错都会让整条路径失败。在并行开发期间这是常态：
     别人的域正在写，一个 `AttributeError` 就能让**所有人**的自检变红
     （实测发生过：`AuditPolicy.summary()` 不存在，于是任何走组合根的脚本都崩）。
@@ -222,7 +222,7 @@ def _load_cost_capabilities():
     """
     import importlib
 
-    from fpa.bootstrap import _module_name, discover_domains, load_all
+    from yuxin.bootstrap import _module_name, discover_domains, load_all
 
     try:
         return load_all()
@@ -230,7 +230,7 @@ def _load_cost_capabilities():
         print(f"警告：真实组合根完全装载失败（{type(exc).__name__}: {exc}）")
         print("      退化为逐域装载，只强制要求 cost 域成功。\n")
 
-    from fpa.kernel.capability import REGISTRY
+    from yuxin.kernel.capability import REGISTRY
 
     for domain in discover_domains():
         if domain == "cost":
@@ -1172,7 +1172,7 @@ def main() -> int:  # noqa: C901 - 一个顺序检查清单，拆开会让"哪�
     # 这是 production / warehouse / sales 三个域要调的函数，必须自己先证明它能用。
     # 走**不经过能力声明**的直调路径：那正是调用方（另一个域的服务方法）的形态——
     # 它在自己那个能力的事务里持有 `tx`，不经过 cost 的执行器。
-    from fpa.domains.cost.entries import LEDGER_FEED, record_fact
+    from yuxin.domains.cost.entries import LEDGER_FEED, record_fact
 
     # 用第四个塘口，避免与前 11 段的分组键相撞。
     with uow_factory().begin() as tx:

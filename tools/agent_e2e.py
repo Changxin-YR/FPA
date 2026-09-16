@@ -31,16 +31,16 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
 
 import pymysql  # noqa: E402
 
-from fpa.agent.gateway import AgentToolGateway  # noqa: E402
-from fpa.kernel import capability as cap  # noqa: E402
-from fpa.kernel.audit import AuditWriter  # noqa: E402
-from fpa.kernel.confirmation import ConfirmationGate, ConfirmationStore  # noqa: E402
-from fpa.kernel.errors import DomainError, ErrorCode  # noqa: E402
-from fpa.kernel.fields import f_str  # noqa: E402
-from fpa.kernel.idempotency import IdempotencyStore  # noqa: E402
-from fpa.kernel.runner import ActorView, CapabilityRunner  # noqa: E402
-from fpa.kernel.scope import Scope  # noqa: E402
-from fpa.kernel.uow import ConnectionConfig, UnitOfWork  # noqa: E402
+from yuxin.agent.gateway import AgentToolGateway  # noqa: E402
+from yuxin.kernel import capability as cap  # noqa: E402
+from yuxin.kernel.audit import AuditWriter  # noqa: E402
+from yuxin.kernel.confirmation import ConfirmationGate, ConfirmationStore  # noqa: E402
+from yuxin.kernel.errors import DomainError, ErrorCode  # noqa: E402
+from yuxin.kernel.fields import f_str  # noqa: E402
+from yuxin.kernel.idempotency import IdempotencyStore  # noqa: E402
+from yuxin.kernel.runner import ActorView, CapabilityRunner  # noqa: E402
+from yuxin.kernel.scope import Scope  # noqa: E402
+from yuxin.kernel.uow import ConnectionConfig, UnitOfWork  # noqa: E402
 
 FAILURES = 0
 
@@ -58,9 +58,9 @@ def _config() -> ConnectionConfig:
     return ConnectionConfig(
         host=os.environ.get("MYSQL_HOST", "127.0.0.1"),
         port=int(os.environ.get("MYSQL_PORT", "3306")),
-        user=os.environ.get("MYSQL_USER", "fpa"),
+        user=os.environ.get("MYSQL_USER", "yuxin"),
         password=os.environ.get("MYSQL_PASSWORD", ""),
-        database=os.environ.get("MYSQL_DATABASE", "fpa"),
+        database=os.environ.get("MYSQL_DATABASE", "yuxin"),
     )
 
 
@@ -128,7 +128,7 @@ class PondService:
         )
         row = tx.query_one("SELECT id, code FROM agent_ponds WHERE id=%s", (int(pond_id),))
         if row is None:
-            from fpa.kernel.errors import not_found
+            from yuxin.kernel.errors import not_found
 
             raise not_found("塘口")
         return cap.HandlerResult(
@@ -144,8 +144,8 @@ class PondService:
         )
 
 
-PondService.create.__fpa_load_by_id__ = PondService.load  # type: ignore[attr-defined]
-PondService.close_pond.__fpa_load_by_id__ = PondService.close_load  # type: ignore[attr-defined]
+PondService.create.__yuxin_load_by_id__ = PondService.load  # type: ignore[attr-defined]
+PondService.close_pond.__yuxin_load_by_id__ = PondService.close_load  # type: ignore[attr-defined]
 
 
 def build_registry() -> cap.Registry:

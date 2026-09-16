@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import { createMemoryHistory, createRouter } from 'vue-router'
 import App from '../src/App.vue'
-import { mountFpaApp } from '../src/bootstrap'
+import { mountYuxinApp } from '../src/bootstrap'
 import DataTable from '../src/layers/common/ui/DataTable.vue'
 import DynamicForm from '../src/layers/common/ui/DynamicForm.vue'
 import RecordActions from '../src/layers/common/ui/RecordActions.vue'
@@ -41,13 +41,13 @@ describe('apiUrl 的三种形态', () => {
   })
 
   it('显式跨源基址拼接，且去掉尾斜杠', () => {
-    expect(apiUrl('/api/v1/auth/me', 'https://fpa.example.com/')).toBe(
-      'https://fpa.example.com/api/v1/auth/me',
+    expect(apiUrl('/api/v1/auth/me', 'https://yuxin.example.com/')).toBe(
+      'https://yuxin.example.com/api/v1/auth/me',
     )
   })
 
   it('已经是绝对 URL 时原样返回（不再拼基址）', () => {
-    expect(apiUrl('https://other.example.com/status', 'https://fpa.example.com')).toBe(
+    expect(apiUrl('https://other.example.com/status', 'https://yuxin.example.com')).toBe(
       'https://other.example.com/status',
     )
   })
@@ -380,7 +380,7 @@ describe('csrf', () => {
 })
 
 describe('bootstrap 装配', () => {
-  it('mountFpaApp 把应用挂到给定选择器上（含真实 router）', async () => {
+  it('mountYuxinApp 把应用挂到给定选择器上（含真实 router）', async () => {
     // router 的初始导航需要可解析的响应，避免 jsdom 里的重定向告警
     vi.stubGlobal(
       'fetch',
@@ -399,7 +399,7 @@ describe('bootstrap 装配', () => {
       ),
     )
     document.body.innerHTML = '<div id="app"></div><div id="probe-root"></div>'
-    const app = await mountFpaApp('#probe-root')
+    const app = await mountYuxinApp('#probe-root')
     await flushPromises()
     expect(document.querySelector('#probe-root')?.innerHTML).not.toBe('')
     app.unmount()

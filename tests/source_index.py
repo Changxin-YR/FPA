@@ -11,7 +11,7 @@
 在 `ast.parse` 处抛 `SyntaxError`，pytest 于是把它报成
 
     test_mysql_driver_is_confined_to_one_module  FAILED
-    AssertionError: MySQL 驱动只能出现在 fpa.kernel.uow；实测出现在：['fpa.domains.cost...
+    AssertionError: MySQL 驱动只能出现在 yuxin.kernel.uow；实测出现在：['yuxin.domains.cost...
 
 ——**驱动违规是假的**，真正的问题是另一个文件有语法错误。负责人 与 cost-dev 都被这条
 误导过，最后靠一个独立扫描器才定位。
@@ -35,7 +35,7 @@ from pathlib import Path
 from typing import Iterator
 
 BACKEND = Path(__file__).resolve().parents[1] / "backend"
-PACKAGE = BACKEND / "fpa"
+PACKAGE = BACKEND / "yuxin"
 
 
 def python_files(root: Path) -> Iterator[Path]:

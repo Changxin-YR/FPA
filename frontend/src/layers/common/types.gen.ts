@@ -1,12 +1,12 @@
 /**
  * ⚠️ 本文件是**占位实现**，将由 `tools/gen_frontend_types.py` 覆盖。
  *
- * 权威来源：`FPA/docs/INTERFACES.md`（冻结版 v1）
+ * 权威来源：`yuxin/docs/INTERFACES.md`（冻结版 v1）
  *   - §2   `GET /api/v1/meta/capabilities` 的形状（Capability / CapabilityField / ResourceMeta / StatusEntry）
  *   - §1.1 错误码注册表
  *   - §9   本文件的目标形状
  *
- * 后端真实内核（`FPA/backend/fpa/kernel/`）已存在，本文件按它的真实输出对齐，
+ * 后端真实内核（`yuxin/backend/yuxin/kernel/`）已存在，本文件按它的真实输出对齐，
  * 而不是按文档的示意代码对齐。两处实测差异已在报告里提出（见 §F 的疑问清单）：
  *
  *   1. `Capability.to_meta()`（`kernel/capability.py`）实际输出的字段是
@@ -30,7 +30,7 @@
  * 依赖这些类型才能编译，且类型形状必须严格对齐，否则生成器上线后会出现大面积改错。
  */
 
-/** 错误码——必须与 `backend/fpa/kernel/errors.py::ErrorCode` 逐字一致。 */
+/** 错误码——必须与 `backend/yuxin/kernel/errors.py::ErrorCode` 逐字一致。 */
 export type ErrorCode =
   // 请求侧
   | 'VALIDATION_ERROR'
@@ -316,7 +316,7 @@ export interface StatusEntry {
  * 行内动作的动作词与中文标签（`/meta/capabilities` 的 `actions` 段）。
  *
  * 标签的**唯一来源是服务端**
- * （`backend/fpa/kernel/workflow.py::ACTION_LABELS`，由 `workflow_meta.actions_payload()` 下发）。
+ * （`backend/yuxin/kernel/workflow.py::ACTION_LABELS`，由 `workflow_meta.actions_payload()` 下发）。
  * 前端禁止写 `{view:'查看', ...}` 这种映射表——那就是"同一件事两处描述"。
  */
 export interface ActionsMeta {

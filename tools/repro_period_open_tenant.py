@@ -34,8 +34,8 @@ python tools\\repro_period_open_tenant.py            # 临时库，跑完即删
 python tools\\repro_period_open_tenant.py --keep      # 保留临时库以便手工查看
 ```
 
-- **默认绝不碰 `fpa`**：所有 DDL/DML 只发生在固定临时库 `fpa_periodopen_tenant`；
-  库名**不从命令行取** —— 否则"手滑传了 `fpa`"就会在共享库里建两家企业、污染所有人的 e2e；
+- **默认绝不碰 `yuxin`**：所有 DDL/DML 只发生在固定临时库 `yuxin_periodopen_tenant`；
+  库名**不从命令行取** —— 否则"手滑传了 `yuxin`"就会在共享库里建两家企业、污染所有人的 e2e；
 - 启动时 `DROP DATABASE IF EXISTS` 重建，结束时删除（除非 `--keep`）；
 - 需要建库权限：`MYSQL_ROOT_USER`（默认 `root`）/ `MYSQL_ROOT_PASSWORD`（默认 `1234`，
   与 `tools/repro_period_open_ordering.py`、`tools/bootstrap_db.py` 一致）。
@@ -57,12 +57,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
 
 import pymysql  # noqa: E402
 
-from fpa.kernel.errors import DomainError  # noqa: E402
-from fpa.kernel.invariants import PeriodOpen  # noqa: E402
-from fpa.kernel.scope import Scope  # noqa: E402
-from fpa.kernel.uow import ConnectionConfig, UnitOfWork  # noqa: E402
+from yuxin.kernel.errors import DomainError  # noqa: E402
+from yuxin.kernel.invariants import PeriodOpen  # noqa: E402
+from yuxin.kernel.scope import Scope  # noqa: E402
+from yuxin.kernel.uow import ConnectionConfig, UnitOfWork  # noqa: E402
 
-PROBE_DB = "fpa_periodopen_tenant"
+PROBE_DB = "yuxin_periodopen_tenant"
 
 PERIOD = "2027-01"
 PERIOD_START = date(2027, 1, 1)
@@ -150,7 +150,7 @@ def _kernel_sql() -> str:
     """
     import inspect
 
-    from fpa.kernel import invariants
+    from yuxin.kernel import invariants
 
     return inspect.getsource(invariants.PeriodOpen.check)
 
@@ -288,7 +288,7 @@ def main() -> int:
     args = parser.parse_args()
 
     print("=" * 74)
-    print(f"临时库：{PROBE_DB}（**绝不碰 fpa**）")
+    print(f"临时库：{PROBE_DB}（**绝不碰 yuxin**）")
     print(f"期间：{PERIOD}（{PERIOD_START} ~ {PERIOD_END}）；探测日 {PROBE_DAY}")
 
     config = ConnectionConfig(
@@ -345,7 +345,7 @@ def main() -> int:
                 with conn.cursor() as cur:
                     cur.execute(f"DROP DATABASE IF EXISTS {PROBE_DB}")
             print()
-            print(f"临时库 {PROBE_DB} 已删除；**未触碰 fpa**")
+            print(f"临时库 {PROBE_DB} 已删除；**未触碰 yuxin**")
 
     print()
     if PROBLEMS:

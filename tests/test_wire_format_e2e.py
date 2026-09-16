@@ -47,16 +47,16 @@ def _connection():
     """真实 MySQL 连接（与 `kernel/uow_factory` 同源的环境变量）。"""
     import pymysql
 
-    from fpa.kernel.uow_factory import connection_config
+    from yuxin.kernel.uow_factory import connection_config
 
     return pymysql.connect(**connection_config().as_kwargs())
 
 
 def _readable_resources() -> list[tuple[str, str]]:
     """`(list_path, resource_name)`，只取**当前账号有读能力**的资源。"""
-    from fpa.bootstrap import load_all
-    from fpa.kernel.capability import REGISTRY
-    from fpa.kernel.workflow import RESOURCES
+    from yuxin.bootstrap import load_all
+    from yuxin.kernel.capability import REGISTRY
+    from yuxin.kernel.workflow import RESOURCES
 
     load_all()
     readable = {
@@ -72,7 +72,7 @@ def _readable_resources() -> list[tuple[str, str]]:
 @pytest.fixture(scope="module")
 def client_and_actor():
     """真 Flask test_client + 一个真登录的账号（`client` 会带 Cookie）。"""
-    from fpa.factory import build_app
+    from yuxin.factory import build_app
 
     try:
         connection = _connection()

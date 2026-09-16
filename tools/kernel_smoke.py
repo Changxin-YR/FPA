@@ -11,9 +11,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
 
-from fpa.kernel import capability as cap  # noqa: E402
-from fpa.kernel.errors import DomainError  # noqa: E402
-from fpa.kernel.fields import (  # noqa: E402
+from yuxin.kernel import capability as cap  # noqa: E402
+from yuxin.kernel.errors import DomainError  # noqa: E402
+from yuxin.kernel.fields import (  # noqa: E402
     Choice,
     collect_fields,
     f_enum,
@@ -77,7 +77,7 @@ def main() -> int:
 
     section(1, "Scope：farm 范围缺少分租键必须报错")
     print("  早期版本 common/security/data_scope.py 在同样输入下静默 return '1=0', []")
-    from fpa.kernel.scope import ScopeEntry
+    from yuxin.kernel.scope import ScopeEntry
 
     try:
         ScopeEntry.from_row({"code": "farm-all", "scope_type": "farm", "farm_id": None})
@@ -87,7 +87,7 @@ def main() -> int:
         print(f"{PASS}: {error.code} -> {error.message}")
 
     section(2, "Scope：area 范围正确渲染 SQL 谓词")
-    from fpa.kernel.scope import Scope, ScopePolicy
+    from yuxin.kernel.scope import Scope, ScopePolicy
 
     scope = Scope.from_rows(
         [{"scope_type": "area", "area_id": 5}, {"scope_type": "area", "area_id": 2}],
@@ -110,7 +110,7 @@ def main() -> int:
         print(f"{PASS}: {error.code}")
 
     section(4, "Scope：personal 范围的归属必须与当前账号一致")
-    from fpa.kernel.scope import ScopeType
+    from yuxin.kernel.scope import ScopeType
 
     try:
         Scope(allow_all=False, entries=[ScopeEntry(ScopeType.PERSONAL, 999)], user_id=7)
@@ -373,7 +373,7 @@ def main() -> int:
             failures += 1
 
     section(11, "不变量：可脱离 MySQL 测试")
-    from fpa.kernel.invariants import (
+    from yuxin.kernel.invariants import (
         DistinctActors,
         NoNegativeStock,
         PeriodOpen,
@@ -553,7 +553,7 @@ def main() -> int:
     # 那会连它的 `resource()` 一起执行，与本脚本第 12 段对 `pond` 的注册冲突，实测
     # `资源 pond 重复注册`；也不能用第 12 段那个 `pond_flow` —— 它在本行之后才定义，
     # 会得到 UnboundLocalError。就地建一个既无耦合、又只依赖状态机的构造契约）。
-    from fpa.kernel.workflow import (
+    from yuxin.kernel.workflow import (
         State,
         Tone,
         Transition,
@@ -634,15 +634,15 @@ def main() -> int:
 
     section(12, "状态机与资源声明：前端 status_dict 与 row_actions 由此派生")
     print("  对应 frontend-recon 提的契约缺口：to_meta 不输出 resource/row_actions，且 ref 缺 list_path")
-    from fpa.kernel.fields import RefTarget as RefTargetSpec
-    from fpa.kernel.workflow import (
+    from yuxin.kernel.fields import RefTarget as RefTargetSpec
+    from yuxin.kernel.workflow import (
         RowAction,
         State,
         Tone,
         Transition,
         Workflow,
     )
-    from fpa.kernel.workflow import resource as declare_resource
+    from yuxin.kernel.workflow import resource as declare_resource
 
     pond_flow = Workflow(
         resource="pond",

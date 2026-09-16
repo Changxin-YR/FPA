@@ -36,8 +36,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 FRONTEND = ROOT / "frontend"
 
-BACKEND = os.environ.get("FPA_BACKEND_URL", "http://127.0.0.1:5101")
-FRONTEND_URL = os.environ.get("FPA_FRONTEND_URL", "http://127.0.0.1:5273")
+BACKEND = os.environ.get("YUXIN_BACKEND_URL", "http://127.0.0.1:5101")
+FRONTEND_URL = os.environ.get("YUXIN_FRONTEND_URL", "http://127.0.0.1:5273")
 
 #: 演示账号（开发库里的真实行，见 `users.username='demo'`）。
 DEMO_USER = "demo"
@@ -85,9 +85,9 @@ def _playwright_script() -> str:
     return """
 const { chromium } = require('playwright')
 
-const FRONTEND = process.env.FPA_FRONTEND_URL
-const USER = process.env.FPA_DEMO_USER
-const PASSWORD = process.env.FPA_DEMO_PASSWORD
+const FRONTEND = process.env.YUXIN_FRONTEND_URL
+const USER = process.env.YUXIN_DEMO_USER
+const PASSWORD = process.env.YUXIN_DEMO_PASSWORD
 
 ;(async () => {
   const browser = await chromium.launch()
@@ -154,9 +154,9 @@ def main() -> int:
 
     print("\n=== 2. 真实浏览器走完整登录（无任何 route 拦截）===")
     env = dict(os.environ)
-    env["FPA_FRONTEND_URL"] = FRONTEND_URL
-    env["FPA_DEMO_USER"] = DEMO_USER
-    env["FPA_DEMO_PASSWORD"] = DEMO_PASSWORD
+    env["YUXIN_FRONTEND_URL"] = FRONTEND_URL
+    env["YUXIN_DEMO_USER"] = DEMO_USER
+    env["YUXIN_DEMO_PASSWORD"] = DEMO_PASSWORD
     script = _playwright_script()
     proc = subprocess.run(
         ["node", "-e", script],

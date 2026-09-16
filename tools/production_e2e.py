@@ -8,7 +8,7 @@ fixture that patches anything onto the service.
 
 The master_data domain shipped for a long time with write capabilities that
 returned HTTP 500 on every real path, because the reload function
-(`__fpa_load_by_id__`) was attached only inside the e2e fixtures
+(`__yuxin_load_by_id__`) was attached only inside the e2e fixtures
 (`tools/runner_e2e.py:199-201`, `web_e2e.py:133`, `agent_e2e.py:147-148`). The
 fixtures covered the production path, so all seven self-checks stayed green while
 the real path was broken.
@@ -16,7 +16,7 @@ the real path was broken.
 `ROLLOUT_CONTRACT.md` Sec 3 calls this a template debt. To make sure the new
 domains do not copy it, this file asserts:
 
-    `CapabilityRunner._resolve()` can resolve `__fpa_load_by_id__` for every write
+    `CapabilityRunner._resolve()` can resolve `__yuxin_load_by_id__` for every write
     capability straight from the registered handler, WITHOUT any patching.
 
 ## What is proven
@@ -34,7 +34,7 @@ domains do not copy it, this file asserts:
 
 Usage::
 
-    $env:MYSQL_DATABASE='fpa_production'
+    $env:MYSQL_DATABASE='yuxin_production'
     python tools/production_e2e.py
 """
 
@@ -46,13 +46,13 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
 
-from fpa.kernel import capability as cap  # noqa: E402
-from fpa.kernel.audit import AuditWriter  # noqa: E402
-from fpa.kernel.errors import DomainError  # noqa: E402
-from fpa.kernel.idempotency import IdempotencyStore  # noqa: E402
-from fpa.kernel.runner import ActorView, CapabilityRunner, Invocation  # noqa: E402
-from fpa.kernel.scope import Scope  # noqa: E402
-from fpa.kernel.uow import ConnectionConfig, UnitOfWork  # noqa: E402
+from yuxin.kernel import capability as cap  # noqa: E402
+from yuxin.kernel.audit import AuditWriter  # noqa: E402
+from yuxin.kernel.errors import DomainError  # noqa: E402
+from yuxin.kernel.idempotency import IdempotencyStore  # noqa: E402
+from yuxin.kernel.runner import ActorView, CapabilityRunner, Invocation  # noqa: E402
+from yuxin.kernel.scope import Scope  # noqa: E402
+from yuxin.kernel.uow import ConnectionConfig, UnitOfWork  # noqa: E402
 
 FAILURES = 0
 
@@ -92,9 +92,9 @@ def _config() -> ConnectionConfig:
     return ConnectionConfig(
         host=os.environ.get("MYSQL_HOST", "127.0.0.1"),
         port=int(os.environ.get("MYSQL_PORT", "3306")),
-        user=os.environ.get("MYSQL_USER", "fpa"),
-        password=os.environ.get("MYSQL_PASSWORD", "fpa_dev_password"),
-        database=os.environ.get("MYSQL_DATABASE", "fpa"),
+        user=os.environ.get("MYSQL_USER", "yuxin"),
+        password=os.environ.get("MYSQL_PASSWORD", "yuxin_dev_password"),
+        database=os.environ.get("MYSQL_DATABASE", "yuxin"),
     )
 
 
@@ -213,7 +213,7 @@ def seed_opening_stock() -> None:
     """
     from datetime import date, datetime, timedelta
 
-    from fpa.domains.warehouse.ledger import apply_movement, ledger_source_ref
+    from yuxin.domains.warehouse.ledger import apply_movement, ledger_source_ref
 
     scope = Scope.from_rows([{"scope_type": "area", "area_id": 1}], user_id=1)
     with uow_factory().begin() as tx:
@@ -257,7 +257,7 @@ def seed_opening_stock() -> None:
 def clean(tx: UnitOfWork) -> None:
     """Remove THIS suite's probe rows only.
 
-    ROLLOUT_CONTRACT Sec 5 requires the shared default database (`fpa`): every
+    ROLLOUT_CONTRACT Sec 5 requires the shared default database (`yuxin`): every
     suite runs against the SAME schema, and isolation comes from probe-prefixed rows
     plus cleanup -- NOT from a database per domain ("one DB per domain" was
     overturned by the 负责人; it had also caused a `REVOKE ALL` incident).
@@ -359,7 +359,7 @@ def stock_balance(tx: UnitOfWork, batch_id: int) -> tuple:
 
 
 def main() -> int:
-    # The REAL composition root: discovers every fpa/domains/*/capabilities.py.
+    # The REAL composition root: discovers every yuxin/domains/*/capabilities.py.
     #
     # `bootstrap.load_all()` imports EVERY domain, so a peer domain that is
     # mid-edit and syntactically broken would take this whole suite down. Rather
@@ -377,7 +377,7 @@ def main() -> int:
     import ast as _ast
 
     syntax_broken = []
-    _backend = Path(__file__).resolve().parents[1] / "backend" / "fpa"
+    _backend = Path(__file__).resolve().parents[1] / "backend" / "yuxin"
     for _path in sorted(_backend.rglob("*.py")):
         if "__pycache__" in _path.parts:
             continue
@@ -388,7 +388,7 @@ def main() -> int:
     check("no module in the tree has a syntax error", syntax_broken == [],
           "; ".join(syntax_broken[:4]))
 
-    import fpa.bootstrap as bootstrap
+    import yuxin.bootstrap as bootstrap
 
     broken_domains = []
     for domain in bootstrap.discover_domains():
@@ -447,9 +447,9 @@ def main() -> int:
     for item in registry.all():
         if item.domain != "production" or not item.is_write:
             continue
-        if getattr(item.handler, "__fpa_load_by_id__", None) is None:
+        if getattr(item.handler, "__yuxin_load_by_id__", None) is None:
             unresolvable.append(item.name)
-    check("every write capability resolves __fpa_load_by_id__ from the handler itself",
+    check("every write capability resolves __yuxin_load_by_id__ from the handler itself",
           unresolvable == [], f"missing: {unresolvable}")
 
     # ---------------------------------------------------------------- happy path
@@ -531,7 +531,7 @@ def main() -> int:
     # invariants are excepted). cost and sales both read production tables directly
     # today, so production owns these NAMED read-only accessors instead of letting
     # each domain hard-code the table and its columns.
-    from fpa.domains.production.service import lookup_batch, lookup_harvest
+    from yuxin.domains.production.service import lookup_batch, lookup_harvest
 
     with uow_factory().begin() as tx:
         looked_up = lookup_batch(tx, batch_id=batch_id)
@@ -560,7 +560,7 @@ def main() -> int:
     # Batch form, for list rendering: one query for N rows (no N+1, and no
     # caller-side JOIN). Missing ids are OMITTED so the caller decides what a
     # dangling reference means.
-    from fpa.domains.production.service import lookup_batches
+    from yuxin.domains.production.service import lookup_batches
 
     with uow_factory().begin() as tx:
         many = lookup_batches(tx, batch_ids=[batch_id, 987654321, batch_id])
@@ -690,7 +690,7 @@ def main() -> int:
         # The category comes from the MATERIAL's category through cost's own mapping
         # table, not a hard-coded literal: a feeding may consume a seed/health
         # material, and hard-coding would book those under the wrong category.
-        from fpa.domains.cost.entries import MATERIAL_CATEGORY_TO_COST
+        from yuxin.domains.cost.entries import MATERIAL_CATEGORY_TO_COST
         check("cost category is mapped from the material's category",
               str(cost_row["category_code"])
               == MATERIAL_CATEGORY_TO_COST.get("feed", "feed"),

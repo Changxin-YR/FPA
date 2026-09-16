@@ -15,8 +15,8 @@ import pathlib
 import re
 
 BACKEND = pathlib.Path(__file__).resolve().parents[2] / "backend"
-INV = BACKEND / "fpa" / "kernel" / "invariants.py"
-RUN = BACKEND / "fpa" / "kernel" / "runner.py"
+INV = BACKEND / "yuxin" / "kernel" / "invariants.py"
+RUN = BACKEND / "yuxin" / "kernel" / "runner.py"
 
 
 def main() -> int:
@@ -57,7 +57,7 @@ def main() -> int:
     import sys
 
     sys.path.insert(0, str(BACKEND))
-    from fpa.kernel import invariants as inv_mod
+    from yuxin.kernel import invariants as inv_mod
 
     print(f"  invariants._EXCLUDE_ID_KEY = {inv_mod._EXCLUDE_ID_KEY!r}")
     runner_src_has_key = "_EXCLUDE_ID_KEY" in run

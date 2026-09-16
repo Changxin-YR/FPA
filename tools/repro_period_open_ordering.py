@@ -7,7 +7,7 @@
 用法：
     python tools/repro_period_open_ordering.py
 
-它做三件事（全部在**临时库**里，用后即删，不碰 fpa）：
+它做三件事（全部在**临时库**里，用后即删，不碰 yuxin）：
   1. 建一张最小的 `accounting_periods`，期间为 open；
   2. 模拟"关账动作"：先在**同一事务内** `UPDATE ... SET status='closed'`，
      再在**同一个事务内**调 `PeriodOpen.check()`——这正是执行器的顺序
@@ -45,12 +45,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
 
 import pymysql  # noqa: E402
 
-from fpa.kernel.errors import DomainError  # noqa: E402
-from fpa.kernel.invariants import PeriodOpen  # noqa: E402
-from fpa.kernel.scope import Scope  # noqa: E402
-from fpa.kernel.uow import ConnectionConfig, UnitOfWork  # noqa: E402
+from yuxin.kernel.errors import DomainError  # noqa: E402
+from yuxin.kernel.invariants import PeriodOpen  # noqa: E402
+from yuxin.kernel.scope import Scope  # noqa: E402
+from yuxin.kernel.uow import ConnectionConfig, UnitOfWork  # noqa: E402
 
-PROBE = "fpa_periodopen_repro"
+PROBE = "yuxin_periodopen_repro"
 
 
 def config(database: str) -> ConnectionConfig:
@@ -142,7 +142,7 @@ def main() -> int:
     with root.cursor() as cur:
         cur.execute(f"DROP DATABASE IF EXISTS {PROBE}")
     root.close()
-    print(f"\n（临时库 {PROBE} 已删除；未触碰 fpa）")
+    print(f"\n（临时库 {PROBE} 已删除；未触碰 yuxin）")
     return 0
 
 

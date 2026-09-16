@@ -688,7 +688,7 @@ describe('AgentPanel：确认失败后的卡片状态（一次性令牌）', () 
   /**
    * 令牌是**一次性**的：只要服务端回过话，这张卡的令牌就已经被消费（无论那次执行
    * 成功与否）。而服务端把"过期 / 归属不符 / 参数不匹配 / 已用过"统一成同一句话是
-   * **刻意**的（`backend/fpa/kernel/confirmation.py::consume` 的 docstring：避免把
+   * **刻意**的（`backend/yuxin/kernel/confirmation.py::consume` 的 docstring：避免把
    * 确认机制变成探测工具）—— 所以"再点一次报令牌无效"不是服务端的 bug，
    * 而是**前端不该让一张已作废的卡继续可点**。
    *

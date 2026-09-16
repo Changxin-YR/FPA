@@ -24,9 +24,9 @@ from source_index import (
     python_files as _python_files,
 )
 
-import fpa.bootstrap as bootstrap
-from fpa.kernel.capability import NO_LOADER, REGISTRY
-from fpa.kernel.workflow import RESOURCES
+import yuxin.bootstrap as bootstrap
+from yuxin.kernel.capability import NO_LOADER, REGISTRY
+from yuxin.kernel.workflow import RESOURCES
 
 # ---------------------------------------------------------------------------
 # 依赖方向
@@ -43,7 +43,7 @@ def test_kernel_has_no_web_or_business_dependency() -> None:
         bad = sorted(
             module
             for module in _imported(path)
-            if _matches(module, "flask") or _matches(module, "fpa.domains")
+            if _matches(module, "flask") or _matches(module, "yuxin.domains")
         )
         if bad:
             offenders[_module_name(path)] = bad
@@ -61,15 +61,15 @@ def test_mysql_driver_is_confined_to_one_module() -> None:
     以及用异常消息文本匹配约束类型）。
 
     本测试按意图断言：静态 import pymysql 的模块集合必须恰好是
-    `{fpa.kernel.uow}`。这条比原文更强——它同时禁止了"第二个地方也接驱动"。
+    `{yuxin.kernel.uow}`。这条比原文更强——它同时禁止了"第二个地方也接驱动"。
     """
     modules = {
         _module_name(path)
         for path in _python_files(_PACKAGE)
         if any(_matches(module, "pymysql") for module in _imported(path))
     }
-    assert modules == {"fpa.kernel.uow"}, (
-        "MySQL 驱动只能出现在 fpa.kernel.uow；实测出现在："
+    assert modules == {"yuxin.kernel.uow"}, (
+        "MySQL 驱动只能出现在 yuxin.kernel.uow；实测出现在："
         f"{sorted(modules)}"
     )
 
@@ -157,7 +157,7 @@ def test_no_duplicate_capability_names_or_routes(load_all_status) -> None:
 
 
 def _domain_directories() -> dict[str, str]:
-    """`fpa.domains.<pkg>` -> 声明它的目录（用来核对 `Capability.domain`）。"""
+    """`yuxin.domains.<pkg>` -> 声明它的目录（用来核对 `Capability.domain`）。"""
     found: dict[str, str] = {}
     root = _PACKAGE / "domains"
     for dirpath, dirnames, filenames in os.walk(root):
@@ -165,7 +165,7 @@ def _domain_directories() -> dict[str, str]:
         if "capabilities.py" not in filenames:
             continue
         relative = Path(dirpath).relative_to(root)
-        package = f"fpa.domains.{str(relative).replace(os.sep, '.')}"
+        package = f"yuxin.domains.{str(relative).replace(os.sep, '.')}"
         found[package] = str(relative).replace(os.sep, ".")
     return found
 
@@ -185,7 +185,7 @@ def test_capability_domain_matches_its_declaring_directory(load_all_status) -> N
 
     五域并行铺开时，这是最容易发生的复制粘贴错误（新建域的 `capabilities.py`
     常从别的域整段抄来），而它不会让任何既有检查变红。判据取处理器的模块路径
-    （`fpa.domains.<pkg>.*`）：处理器永远与声明同域，这是本项目"一个域一个目录"的
+    （`yuxin.domains.<pkg>.*`）：处理器永远与声明同域，这是本项目"一个域一个目录"的
     直接推论，不需要额外维护一张映射表。
     """
     bootstrap.load_all()
@@ -200,7 +200,7 @@ def test_capability_domain_matches_its_declaring_directory(load_all_status) -> N
                 if capability.domain != domain:
                     offenders.append(
                         f"{capability.name}: domain={capability.domain!r} "
-                        f"但声明在 fpa.domains.{domain}（handler {module}）"
+                        f"但声明在 yuxin.domains.{domain}（handler {module}）"
                     )
                 break
         else:
@@ -224,11 +224,11 @@ def test_every_write_capability_declares_its_loader() -> None:
     ## 这条断言守的是什么
 
     `runner._reload_after` 要求：任何返回 ``resource_id`` 的写能力，其 handler 必须
-    能解析出 ``__fpa_load_by_id__(tx, *, scope, record_id)``，否则抛
+    能解析出 ``__yuxin_load_by_id__(tx, *, scope, record_id)``，否则抛
     ``INTERNAL_ERROR``（`docs/WRITE_CONTRACT.md` 规则 2：``executed`` 的含义是
     "读回来的行确实是我们要的样子"，不是"我们调用了 INSERT"）。
 
-    在这个属性有主人之前，`backend/fpa/domains/` 下一处都没挂，只有
+    在这个属性有主人之前，`backend/yuxin/domains/` 下一处都没挂，只有
     `tools/runner_e2e.py` 与 `tools/web_e2e.py` 在夹具里手工补挂 —— 于是**生产路径下
     所有写能力都会 500，而七套自检全绿**。这与"组合根缺失"是同一形态的缺陷：
     **夹具盖住了生产路径**。
@@ -246,15 +246,15 @@ def test_every_write_capability_declares_its_loader() -> None:
     默认值 ``loader=None`` 因此被定义为**尚未接线**，而不是"不需要"。默认值不会让
     任何人免于做决定：这一行断言就是他必须做决定的地方。
 
-    ## ⚠️ 属性名是 `__fpa_load_by_id__`，且必须逐字写全
+    ## ⚠️ 属性名是 `__yuxin_load_by_id__`，且必须逐字写全
 
-    本断言读的是 ``__fpa_load_by_id__`` —— 与 `runner._reload_after`、`runner._replay`
+    本断言读的是 ``__yuxin_load_by_id__`` —— 与 `runner._reload_after`、`runner._replay`
     解析的是**同一个字面量**，也与 `Capability.__post_init__` 在声明 `loader=` 时挂载的
     是同一个。
 
     **这个名字绝不能被简写。** Python 的名字改写（name mangling）会把类体内的
-    ``self.__fpa_load_by_id__`` 变成 ``_ClassName__fpa_load_by_id__``；而像
-    "``__fpa_write__``"这种简称**在本仓库里不匹配任何属性**。如果有人按简称去写断言
+    ``self.__yuxin_load_by_id__`` 变成 ``_ClassName__yuxin_load_by_id__``；而像
+    "``__yuxin_write__``"这种简称**在本仓库里不匹配任何属性**。如果有人按简称去写断言
     （例如 `attribute in repr(handler)` 这类子串检查），那条断言会**永远为真**——
     它一次都不可能在真实违规上失败，于是保护不了任何东西。
 
@@ -266,10 +266,10 @@ def test_every_write_capability_declares_its_loader() -> None:
     for item in REGISTRY.all():
         if item.is_read:
             continue
-        loader = getattr(item.handler, "__fpa_load_by_id__", None)
+        loader = getattr(item.handler, "__yuxin_load_by_id__", None)
         if callable(loader):
             continue
-        if getattr(item.handler, "__fpa_no_loader__", False):
+        if getattr(item.handler, "__yuxin_no_loader__", False):
             continue
         unwired.append(f"{item.name}(domain={item.domain}, kind={item.kind})")
 
@@ -286,7 +286,7 @@ def test_loader_declaration_is_not_ambiguous() -> None:
 
     这一条挡住三种真实的笔误：
 
-    1. **属性手工挂载**（`handler.__fpa_load_by_id__ = ...`）与 `loader=` 并存，
+    1. **属性手工挂载**（`handler.__yuxin_load_by_id__ = ...`）与 `loader=` 并存，
        且指向**不同的函数** —— 声明的是 A、执行器用的是 B，哪个生效取决于注册顺序。
        在 `loader=` 出现之前，手工挂载是唯一做法（夹具至今这么写），所以这里给出
        可操作的报错而不是直接禁止。
@@ -302,8 +302,8 @@ def test_loader_declaration_is_not_ambiguous() -> None:
     for item in REGISTRY.all():
         if item.is_read:
             continue
-        attached = getattr(item.handler, "__fpa_load_by_id__", None)
-        marked_no_loader = getattr(item.handler, "__fpa_no_loader__", False)
+        attached = getattr(item.handler, "__yuxin_load_by_id__", None)
+        marked_no_loader = getattr(item.handler, "__yuxin_no_loader__", False)
 
         if marked_no_loader and callable(attached):
             problems.append(
@@ -338,7 +338,7 @@ def test_loader_is_only_declared_where_it_can_be_used() -> None:
     offenders = sorted(
         item.name
         for item in REGISTRY.all()
-        if item.is_read and (item.loader is not None or getattr(item.handler, "__fpa_no_loader__", False))
+        if item.is_read and (item.loader is not None or getattr(item.handler, "__yuxin_no_loader__", False))
     )
     assert offenders == [], (
         "以下读能力声明了 loader / NO_LOADER，但读能力不写库、没有可回读的行："

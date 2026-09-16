@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
-from fpa.domains.master_data import masterdata_write
-from fpa.domains.master_data.masterdata_write import MaterialWriteService
-from fpa.kernel.scope import Scope
+from yuxin.domains.master_data import masterdata_write
+from yuxin.domains.master_data.masterdata_write import MaterialWriteService
+from yuxin.kernel.scope import Scope
 
 
 class _MaterialTx:
@@ -70,8 +70,8 @@ def test_material_creation_starts_as_draft(monkeypatch) -> None:
 
 
 def test_material_submit_and_verify_are_registered() -> None:
-    from fpa.bootstrap import load_all
-    from fpa.kernel.capability import Confirmation, REGISTRY
+    from yuxin.bootstrap import load_all
+    from yuxin.kernel.capability import Confirmation, REGISTRY
 
     load_all()
     submit = REGISTRY.find("material.submit")
@@ -83,8 +83,8 @@ def test_material_submit_and_verify_are_registered() -> None:
 
 
 def test_farm_create_is_registered() -> None:
-    from fpa.bootstrap import load_all
-    from fpa.kernel.capability import REGISTRY
+    from yuxin.bootstrap import load_all
+    from yuxin.kernel.capability import REGISTRY
 
     load_all()
     capability = REGISTRY.find("farm.create")

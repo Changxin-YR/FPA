@@ -22,7 +22,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-PROBE_DIR = ROOT / "backend" / "fpa" / "domains" / "_preflight_import_probe"
+PROBE_DIR = ROOT / "backend" / "yuxin" / "domains" / "_preflight_import_probe"
 PYTHON = sys.executable
 
 #: 与事故同形：语法合法，import 时 NameError

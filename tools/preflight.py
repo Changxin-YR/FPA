@@ -17,7 +17,7 @@
     python tools/preflight.py
 
 它做三件事，且刻意不做第四件：
-  1. **语法**：解析 `backend/fpa` 下每个 .py —— 语法错误没有公共门禁
+  1. **语法**：解析 `backend/yuxin` 下每个 .py —— 语法错误没有公共门禁
      （`check_source_hygiene.py` 不看语法；`test_architecture._imported()` 没有
      `except SyntaxError`），所以它只能在这里被点名；
   2. **装配**：`bootstrap.load_all()` 能否装载，以及每个域注册了多少条能力；
@@ -40,7 +40,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 BACKEND = ROOT / "backend"
-PACKAGE = BACKEND / "fpa"
+PACKAGE = BACKEND / "yuxin"
 
 
 def python_files(root: Path):
@@ -79,7 +79,7 @@ def check_bootstrap() -> tuple[bool, list[str]]:
     """装载组合根，返回每个域注册的能力数。"""
     sys.path.insert(0, str(BACKEND))
     try:
-        from fpa.bootstrap import load_all, load_report
+        from yuxin.bootstrap import load_all, load_report
 
         registry = load_all()
         lines = [f"共 {len(registry.all())} 条能力"]
@@ -97,7 +97,7 @@ def check_bootstrap() -> tuple[bool, list[str]]:
 
 
 def check_import_every_module() -> tuple[bool, list[str]]:
-    """逐个 import `backend/fpa` 下的**每个**模块。
+    """逐个 import `backend/yuxin` 下的**每个**模块。
 
     ## 为什么 `ast.parse` 和 `load_all()` 都不够
 
@@ -154,7 +154,7 @@ def check_import_every_module() -> tuple[bool, list[str]]:
 
 
 def _module_parts(path: Path) -> tuple[str, ...]:
-    """`.../backend/fpa/domains/cost/entries.py` -> `('fpa','domains','cost','entries')`"""
+    """`.../backend/yuxin/domains/cost/entries.py` -> `('yuxin','domains','cost','entries')`"""
     try:
         relative = path.relative_to(BACKEND).with_suffix("")
     except ValueError:
@@ -177,7 +177,7 @@ def check_gate(name: str, args: list[str]) -> tuple[bool, str]:
 def main() -> int:
     failures = 0
 
-    print("=== 1. 语法（backend/fpa 逐个 ast.parse）===")
+    print("=== 1. 语法（backend/yuxin 逐个 ast.parse）===")
     ok, lines = check_syntax()
     if ok:
         count = sum(1 for _ in python_files(PACKAGE))

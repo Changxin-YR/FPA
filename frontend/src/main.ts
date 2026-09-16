@@ -1,3 +1,3 @@
-import { mountFpaApp } from './bootstrap'
+import { mountYuxinApp } from './bootstrap'
 
-mountFpaApp()
+mountYuxinApp()

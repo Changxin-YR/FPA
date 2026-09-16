@@ -25,11 +25,11 @@
 
 ## 判据（每一项都能"红"）
 
-1. `fpa-biz-tools` 行存在且 **enabled** —— 业务工具的唯一来源；
+1. `yuxin-biz-tools` 行存在且 **enabled** —— 业务工具的唯一来源；
 2. 它引用的包能解析，且该包的 `cordis.patch.yml` **真的含 insert（工具源）**；
 3. 一组"必须被关掉"的行 id **一个都不能是 enabled**（web / 文件系统 / 命令 / 子代理 / 技能 / goal …）；
 4. 合成树里**不允许再出现**任何 enabled 的工具提供者，除非它在白名单里
-   （白名单 = `tools` 注册表服务本身 + `fpa-biz-tools`）。这条是"防止下一版 bundle
+   （白名单 = `tools` 注册表服务本身 + `yuxin-biz-tools`）。这条是"防止下一版 bundle
    悄悄挂上新的逃逸工具"的兜底 —— 前三条都过、这一条仍可能红；
 5. `system-prompt` 行带 `includeHarnessIdentity: false` + 非空 `persona`
    —— 人格归渔芯，而不是 Harness 默认的编程助手。
@@ -78,7 +78,7 @@ _Loader.add_constructor(
 )
 
 #: 业务工具插件包名（与 patch 的 insert 段一致）。
-BIZ_TOOLS_PACKAGE = "@fpa/dsh-biz-tools"
+BIZ_TOOLS_PACKAGE = "@yuxin/dsh-biz-tools"
 
 #: 运行时 patch（本仓库内的权威副本）。
 RUNTIME_PATCH = ROOT / "agent-runtime" / "cordis.patch.yml"
@@ -115,7 +115,7 @@ ESCAPE_GROUPS: dict[str, tuple[str, ...]] = {
 }
 
 #: 允许在合成树里 enabled 的**行**：`tools` 是工具注册表服务本身（不是工具提供者），
-#: `fpa-biz-tools` 是我们的业务工具来源。其余 `tool-*` / `web*` / `subagent*` / `skill*`
+#: `yuxin-biz-tools` 是我们的业务工具来源。其余 `tool-*` / `web*` / `subagent*` / `skill*`
 #: 只要 enabled 就是一条逃逸面。
 PROVIDER_ROW_PATTERNS = (
     re.compile(r"^tool-"),
@@ -128,7 +128,7 @@ PROVIDER_ROW_PATTERNS = (
     re.compile(r"^fs-local$"),
     re.compile(r"^attachment-local$"),
 )
-ALLOWED_PROVIDER_ROWS = {"tools", "fpa-biz-tools"}
+ALLOWED_PROVIDER_ROWS = {"tools", "yuxin-biz-tools"}
 
 
 class AuditOutcome:
@@ -171,7 +171,7 @@ def compose_tree(patch: Path | None) -> tuple[list[dict] | None, str]:
     `patch=None` 时不给覆盖层，用作**反向对照**（见 `main`）：同一棵树、同一段代码，
     少一个 `--patch` 就必须读到"没有业务工具"。
     """
-    from fpa.settings import Settings
+    from yuxin.settings import Settings
 
     settings = Settings.from_env()
     dsh_bin = (settings.agent_dsh_bin or "").strip() or str(
@@ -188,8 +188,8 @@ def compose_tree(patch: Path | None) -> tuple[list[dict] | None, str]:
     env["DSH_HOME"] = settings.agent_dsh_home or str(ROOT / ".dsh-home")
     env["DSH_RUNTIME_MODE"] = "node"
     # patch 在配置求值阶段读这两个键；给占位值即可（本工具不发起任何调用）。
-    env.setdefault("FPA_AGENT_GATEWAY_URL", "http://127.0.0.1:1/api/v1/agent")
-    env.setdefault("FPA_AGENT_CONTEXT_TOKEN", "audit-placeholder")
+    env.setdefault("YUXIN_AGENT_GATEWAY_URL", "http://127.0.0.1:1/api/v1/agent")
+    env.setdefault("YUXIN_AGENT_CONTEXT_TOKEN", "audit-placeholder")
     argv = [dsh_bin, "--profile", settings.agent_profile or "sdk"]
     if patch is not None:
         argv += ["--patch", str(patch)]
@@ -234,27 +234,27 @@ def audit(rows: list[dict], outcome: AuditOutcome) -> None:
     outcome.rows = by_id
 
     # --- 1. 业务工具行 -------------------------------------------------------
-    biz = by_id.get("fpa-biz-tools")
+    biz = by_id.get("yuxin-biz-tools")
     if biz is None:
         outcome.fail(
-            "合成树里没有 `fpa-biz-tools` 行：运行时 patch 没被加载 → 模型不会拿到任何 "
+            "合成树里没有 `yuxin-biz-tools` 行：运行时 patch 没被加载 → 模型不会拿到任何 "
             "渔芯业务工具（它会自己手工拼 HTTP 绕过设计）"
         )
     else:
         if biz.get("disabled") is True:
-            outcome.fail("`fpa-biz-tools` 行存在但被 disabled")
+            outcome.fail("`yuxin-biz-tools` 行存在但被 disabled")
         if biz.get("name") != BIZ_TOOLS_PACKAGE:
-            outcome.fail(f"`fpa-biz-tools` 行的 name 是 {biz.get('name')!r}，期望 {BIZ_TOOLS_PACKAGE!r}")
+            outcome.fail(f"`yuxin-biz-tools` 行的 name 是 {biz.get('name')!r}，期望 {BIZ_TOOLS_PACKAGE!r}")
         config = biz.get("config") if isinstance(biz.get("config"), dict) else {}
         for key in ("gatewayUrl", "contextToken"):
             if key not in config:
-                outcome.fail(f"`fpa-biz-tools` 的 config 缺 `{key}`（插件 apply() 会拒绝启动）")
+                outcome.fail(f"`yuxin-biz-tools` 的 config 缺 `{key}`（插件 apply() 会拒绝启动）")
 
     # --- 2. 包与它的 insert --------------------------------------------------
-    packages = list(ROOT.glob(".dsh-home/profiles/*/node_modules/@fpa/dsh-biz-tools"))
+    packages = list(ROOT.glob(".dsh-home/profiles/*/node_modules/@yuxin/dsh-biz-tools"))
     if not packages:
         outcome.fail(
-            "`.dsh-home/profiles/*/node_modules/@fpa/dsh-biz-tools` 不存在："
+            "`.dsh-home/profiles/*/node_modules/@yuxin/dsh-biz-tools` 不存在："
             "合成树的 insert 解析不到包（插件加载会失败）"
         )
     else:
@@ -342,7 +342,7 @@ def _control(tree: dict[str, dict]) -> str | None:
     只测"接上 patch 后返回 0"是假测试 —— 一个恒返回 0 的实现同样能过。有了这一对读数，
     "这行确实由那个 patch 带进来"才是被证明的，而不是被假设的。
     """
-    if "fpa-biz-tools" not in tree:
+    if "yuxin-biz-tools" not in tree:
         return "absent"
     return "present"
 
@@ -419,7 +419,7 @@ def tool_readout(limit: int = 3) -> tuple[list[dict], str]:
         report.append(
             {
                 "session": path.parent.name,
-                "system_is_fpa": "塘小助" in system,
+                "system_is_yuxin": "塘小助" in system,
                 "harness_identity_present": "You are an AI agent powered by DeepSeek Harness" in system,
                 "system_head": system[:120],
                 "tool_count": len(tools),
@@ -449,7 +449,7 @@ def main(argv: list[str]) -> int:
             for item in report:
                 print()
                 print(f"会话 {item['session']}：工具 {item['tool_count']} 个")
-                print(f"  系统提示词是 渔芯的（含「塘小助」）：{item['system_is_fpa']}")
+                print(f"  系统提示词是 渔芯的（含「塘小助」）：{item['system_is_yuxin']}")
                 print(f"  仍含 Harness 身份句：{item['harness_identity_present']}")
                 print(f"  逃逸类工具（应为空）：{item['escape_tools']}")
                 print(f"  当前迭代实际调用：{item['calls'] or '（无）'}")
@@ -457,7 +457,7 @@ def main(argv: list[str]) -> int:
         bad = [
             item
             for item in report
-            if item["escape_tools"] or not item["system_is_fpa"] or not item["business_tools"]
+            if item["escape_tools"] or not item["system_is_yuxin"] or not item["business_tools"]
         ]
         if bad:
             print()
@@ -469,10 +469,10 @@ def main(argv: list[str]) -> int:
 
     outcome = AuditOutcome()
 
-    # patch 路径取自**生产代码**（`fpa.harness.session.resolve_harness_patch`），不在这里
+    # patch 路径取自**生产代码**（`yuxin.harness.session.resolve_harness_patch`），不在这里
     # 另写一遍 —— 否则本工具验的是自己那套推导，而不是 session 真正加载的那份。
-    from fpa.harness.session import resolve_harness_patch
-    from fpa.settings import Settings
+    from yuxin.harness.session import resolve_harness_patch
+    from yuxin.settings import Settings
 
     resolved = resolve_harness_patch(Settings.from_env())
     if not resolved:
@@ -501,7 +501,7 @@ def main(argv: list[str]) -> int:
     # ★ 判据有信号的**必要条件**：加不加这个 patch，那行必须从无到有。
     if not (with_patch == "present" and without_patch == "absent"):
         outcome.unproven(
-            "反向对照失败：不给 --patch 时 `fpa-biz-tools` 是 "
+            "反向对照失败：不给 --patch 时 `yuxin-biz-tools` 是 "
             f"{without_patch!r}、给 --patch 时是 {with_patch!r}。"
             "两者应当分别是 'absent' / 'present'，否则说明这行不是这个 patch 带来的"
         )
@@ -512,7 +512,7 @@ def main(argv: list[str]) -> int:
         "patch": str(patch),
         "rows": len(rows),
         "control": {"with_patch": with_patch, "without_patch": without_patch},
-        "fpa_biz_tools": "fpa-biz-tools" in outcome.rows,
+        "yuxin_biz_tools": "yuxin-biz-tools" in outcome.rows,
         "enabled_escape_rows": [
             row_id
             for group in ESCAPE_GROUPS.values()
@@ -535,7 +535,7 @@ def main(argv: list[str]) -> int:
             "（必须 absent → present，判据才有信号）"
         )
         print(f"合成树规模：{summary['rows']} 行（自证：远大于 dsh-base 的最小树才算合成成功）")
-        print(f"业务工具来源 `fpa-biz-tools`：{'在' if summary['fpa_biz_tools'] else '**不在**'}")
+        print(f"业务工具来源 `yuxin-biz-tools`：{'在' if summary['yuxin_biz_tools'] else '**不在**'}")
         print(f"合成树里 enabled 的逃逸行：{summary['enabled_escape_rows'] or '无'}")
         print()
         if outcome.violations:

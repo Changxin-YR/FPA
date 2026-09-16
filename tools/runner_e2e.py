@@ -27,19 +27,19 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
 
 import pymysql  # noqa: E402
 
-from fpa.domains._base import Page  # noqa: E402
-from fpa.kernel import capability as cap  # noqa: E402
-from fpa.kernel.audit import AuditWriter  # noqa: E402
-from fpa.kernel.errors import DomainError, ErrorCode  # noqa: E402
-from fpa.kernel.fields import f_num, f_ref, f_str  # noqa: E402
-from fpa.kernel.idempotency import IdempotencyStore  # noqa: E402
-from fpa.kernel.runner import (  # noqa: E402
+from yuxin.domains._base import Page  # noqa: E402
+from yuxin.kernel import capability as cap  # noqa: E402
+from yuxin.kernel.audit import AuditWriter  # noqa: E402
+from yuxin.kernel.errors import DomainError, ErrorCode  # noqa: E402
+from yuxin.kernel.fields import f_num, f_ref, f_str  # noqa: E402
+from yuxin.kernel.idempotency import IdempotencyStore  # noqa: E402
+from yuxin.kernel.runner import (  # noqa: E402
     ActorView,
     CapabilityRunner,
     Invocation,
 )
-from fpa.kernel.scope import Scope, ScopeType  # noqa: E402
-from fpa.kernel.uow import ConnectionConfig, UnitOfWork  # noqa: E402
+from yuxin.kernel.scope import Scope, ScopeType  # noqa: E402
+from yuxin.kernel.uow import ConnectionConfig, UnitOfWork  # noqa: E402
 
 FAILURES = 0
 
@@ -64,9 +64,9 @@ def _config() -> ConnectionConfig:
     return ConnectionConfig(
         host=os.environ.get("MYSQL_HOST", "127.0.0.1"),
         port=int(os.environ.get("MYSQL_PORT", "3306")),
-        user=os.environ.get("MYSQL_USER", "fpa"),
+        user=os.environ.get("MYSQL_USER", "yuxin"),
         password=os.environ.get("MYSQL_PASSWORD", ""),
-        database=os.environ.get("MYSQL_DATABASE", "fpa"),
+        database=os.environ.get("MYSQL_DATABASE", "yuxin"),
     )
 
 
@@ -196,9 +196,9 @@ class PondService:
         )
 
 
-PondService.create.__fpa_load_by_id__ = PondService.load_for_audit  # type: ignore[attr-defined]
-PondService.create_that_fails_after_write.__fpa_load_by_id__ = PondService.load_for_audit  # type: ignore[attr-defined]
-PondService.create_that_vanishes.__fpa_load_by_id__ = PondService.load_for_audit  # type: ignore[attr-defined]
+PondService.create.__yuxin_load_by_id__ = PondService.load_for_audit  # type: ignore[attr-defined]
+PondService.create_that_fails_after_write.__yuxin_load_by_id__ = PondService.load_for_audit  # type: ignore[attr-defined]
+PondService.create_that_vanishes.__yuxin_load_by_id__ = PondService.load_for_audit  # type: ignore[attr-defined]
 
 
 class FixedScopeResolver:

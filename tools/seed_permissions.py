@@ -24,7 +24,7 @@
 也就是说**大多数权限码并不等于能力名**（`cost.manage` / `sales.deliver` /
 `warehouse.receipt.verify` / `finance.payment.manage` …）。手写清单在这里不是"容易漏"，
 而是**必然错**——而且错了不会报错，只会在某个角色配不出权限时表现为"点了没反应"。
-所以本工具的唯一输入是 `fpa.bootstrap.load_all()` 的注册表；**没有任何手抄常量表**。
+所以本工具的唯一输入是 `yuxin.bootstrap.load_all()` 的注册表；**没有任何手抄常量表**。
 
 ## 三个设计问题的判断（任务说明要求给理由，不照做）
 
@@ -56,7 +56,7 @@
 
   迁移是纯 SQL，**读不到 Python 注册表**。要种这 47 个码，就得在迁移里手写一份
   清单——那就回到了上面第 1 点否定掉的东西：一份会与 `Capability` 声明漂移的副本。
-  **派生工具放 `tools/`，因为它必须能 import `fpa.bootstrap`。**
+  **派生工具放 `tools/`，因为它必须能 import `yuxin.bootstrap`。**
 
   代价是"种子不会随 `migrate.py apply` 自动执行"。这个代价用一个 **`--check` 模式**
   补上：它可以放进任何门禁/自检，一旦注册表新增了未种的权限码就报错退出。
@@ -80,12 +80,12 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "backend"))
 
-from fpa.kernel.errors import DomainError  # noqa: E402
-from fpa.kernel.uow import ConnectionConfig, UnitOfWork, translate_mysql_error  # noqa: E402
+from yuxin.kernel.errors import DomainError  # noqa: E402
+from yuxin.kernel.uow import ConnectionConfig, UnitOfWork, translate_mysql_error  # noqa: E402
 
 #: 演示角色的固定标识。用固定值而不是时间戳/随机：让"重复跑"幂等，
 #: 也让"生产库里有没有这条"变成一个可以用一条 SELECT 回答的问题。
-DEMO_ROLE_CODE = "fpa-demo-all-permissions"
+DEMO_ROLE_CODE = "yuxin-demo-all-permissions"
 DEMO_ROLE_NAME = "演示：全部权限（自检/验收专用）"
 
 
@@ -114,8 +114,8 @@ def derive() -> tuple[list[PermissionSeed], list[str], list[str], list[str]]:
     """
     import importlib
 
-    from fpa.bootstrap import _module_name, discover_domains
-    from fpa.kernel.capability import REGISTRY
+    from yuxin.bootstrap import _module_name, discover_domains
+    from yuxin.kernel.capability import REGISTRY
 
     failed_domains: list[str] = []
     for domain in discover_domains():
@@ -164,7 +164,7 @@ def connection_config() -> ConnectionConfig:
 
     不自己拼默认值——默认值只应有一处（内核 `uow_factory._DEFAULTS`）。
     """
-    from fpa.kernel.uow_factory import connection_config as kernel_config
+    from yuxin.kernel.uow_factory import connection_config as kernel_config
 
     return kernel_config()
 
@@ -195,7 +195,7 @@ def apply_seeds(seeds: list[PermissionSeed]) -> tuple[int, int]:
                     seed.code,
                     seed.name,
                     seed.domain,
-                    "由 backend/fpa/domains/*/capabilities.py 派生（tools/seed_permissions.py）",
+                    "由 backend/yuxin/domains/*/capabilities.py 派生（tools/seed_permissions.py）",
                 ),
             )
             if seed.code in before:
@@ -209,8 +209,8 @@ def apply_demo_role(seeds: list[PermissionSeed]) -> tuple[int, int]:
     """种一个**演示**角色并把全部权限授给它。返回 `(角色id, 授权条数)`。
 
     为什么允许它存在：验收要求"同一个角色/用户跑一条真实能力，种之前失败、种之后成功"，
-    而那需要一个持有权限的角色。它被刻意命名为 `fpa-demo-*`，以便生产库清理时
-    一条 `DELETE FROM roles WHERE code LIKE 'fpa-demo-%'` 就能摘掉。
+    而那需要一个持有权限的角色。它被刻意命名为 `yuxin-demo-*`，以便生产库清理时
+    一条 `DELETE FROM roles WHERE code LIKE 'yuxin-demo-%'` 就能摘掉。
     """
     uow = UnitOfWork(connection_config())
     with uow.begin() as tx:
@@ -309,7 +309,7 @@ def main(argv: list[str] | None = None) -> int:
         role_id, granted = apply_demo_role(seeds)
         print(f"已种演示角色 {DEMO_ROLE_CODE}(id={role_id})，授予 {granted} 个权限")
         print("  提醒：这是**验收用**数据，生产库应用 "
-              "`DELETE FROM roles WHERE code LIKE 'fpa-demo-%'` 摘掉")
+              "`DELETE FROM roles WHERE code LIKE 'yuxin-demo-%'` 摘掉")
 
     return 0
 

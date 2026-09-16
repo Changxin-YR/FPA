@@ -1,9 +1,9 @@
 /**
- * 插件包：把 FPA 的每一条能力注册成**一个真实工具、带真实 JSON Schema**。
+ * 插件包：把渔芯的每一条能力注册成**一个真实工具、带真实 JSON Schema**。
  *
  * ## 与早期实现的根本差别
  *
- * 早期实现（`deepseek-harness-master/packages/extensions/fpa-agent-tools/src/index.ts`，3 KB）
+ * 早期实现（`deepseek-harness-master/packages/extensions/yuxin-agent-tools/src/index.ts`，3 KB）
  * 只注册 `biz_query` / `biz_mutation` **两个元工具**，把全部业务操作名塞进一段长
  * `description` 字符串里让模型去挑。本实现为**每一条能力注册一个独立工具**，
  * schema 直接取自服务端下发的标准 JSON Schema —— 模型不需要"从长描述里挑字符串"，
@@ -27,13 +27,13 @@ import type { GatewayClient, RemoteToolSpec } from './gateway.js'
 import { parameterSpecFromJsonSchema } from './schema.js'
 import type { GatewayConfig, JsonLike, ToolOutcome } from './types.js'
 
-export const name = 'fpa-biz-tools'
+export const name = 'yuxin-biz-tools'
 
 /** 本插件依赖 Harness 的工具注册表服务。 */
 export const inject = ['tools']
 
 export interface FpaBizToolsConfig {
-  /** 形如 `https://host/fpa/api/v1/agent`；只允许 http/https。 */
+  /** 形如 `https://host/yuxin/api/v1/agent`；只允许 http/https。 */
   readonly gatewayUrl: string
   /** 单轮上下文令牌；由 Harness 侧从受控配置读取，**不落 env、不落日志**。 */
   readonly contextToken: string
@@ -107,7 +107,7 @@ export function toModelPayload(outcome: ToolOutcome): JsonLike {
  *
  * 本实现**从不**把令牌写进 `process.env`。但 Harness 子进程会继承父进程环境，
  * 因此如果外部（旧启动脚本、`.env` 加载器）已经把它放进去了，这里主动清掉。
- * 参考实现也做了同样的清理（`delete process.env.FPA_AGENT_CONTEXT_TOKEN`），
+ * 参考实现也做了同样的清理（`delete process.env.YUXIN_AGENT_CONTEXT_TOKEN`），
  * 说明这是真实发生过的泄漏面。
  */
 function scrubCredentialsFromEnv(keys: readonly string[]): void {
@@ -117,7 +117,7 @@ function scrubCredentialsFromEnv(keys: readonly string[]): void {
   }
 }
 
-const SCRUBBED_ENV_KEYS = ['FPA_AGENT_CONTEXT_TOKEN', 'FPA_AGENT_GATEWAY_URL'] as const
+const SCRUBBED_ENV_KEYS = ['YUXIN_AGENT_CONTEXT_TOKEN', 'YUXIN_AGENT_GATEWAY_URL'] as const
 /**
  * 幂等键的**本地兜底**：上游没有给 callId 时用它。
  *
@@ -183,7 +183,7 @@ function registerCatalogTool(
         const stableCallId = execIds.rootCallId || execIds.callId
         const needsKey = spec.requires_idempotency_key === true
         const idempotencyKey = needsKey
-          ? `fpa:${spec.name}:${stableCallId || nextLocalCallId()}`
+          ? `yuxin:${spec.name}:${stableCallId || nextLocalCallId()}`
           : undefined
 
         const outcome = await client.callTool(

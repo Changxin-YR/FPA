@@ -15,9 +15,9 @@ import sys
 
 import pymysql
 
-DATABASE = os.environ.get("MYSQL_DATABASE", "fpa")
-APP_USER = os.environ.get("MYSQL_USER", "fpa")
-APP_PASSWORD = os.environ.get("MYSQL_PASSWORD", "fpa_dev_password")
+DATABASE = os.environ.get("MYSQL_DATABASE", "yuxin")
+APP_USER = os.environ.get("MYSQL_USER", "yuxin")
+APP_PASSWORD = os.environ.get("MYSQL_PASSWORD", "yuxin_dev_password")
 ROOT_USER = os.environ.get("MYSQL_ROOT_USER", "root")
 ROOT_PASSWORD = os.environ.get("MYSQL_ROOT_PASSWORD", "")
 HOST = os.environ.get("MYSQL_HOST", "127.0.0.1")
@@ -68,8 +68,8 @@ def main() -> int:
         #
         # 这里原本有一句不带库名的 `REVOKE ALL PRIVILEGES, GRANT OPTION FROM user`，
         # 意图是"把授权隔离到目标库"。但它会清空该账号在**所有库**上的授权：任何成员用
-        # `MYSQL_DATABASE=fpa_xxx` 跑一次本脚本，就会把别人正在用的 `fpa` 授权
-        # 一并收走，症状是 `Access denied for user 'fpa'@... to database 'fpa'`
+        # `MYSQL_DATABASE=yuxin_xxx` 跑一次本脚本，就会把别人正在用的 `yuxin` 授权
+        # 一并收走，症状是 `Access denied for user 'yuxin'@... to database 'yuxin'`
         # —— 报错与 bootstrap 毫无关系，排查方向会被引偏。实测已发生两次。
         #
         # 收窄成 `REVOKE ... ON `{DATABASE}`.*` 也不可取：目标库上若尚无该账号的授权，

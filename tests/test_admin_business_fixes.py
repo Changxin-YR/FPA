@@ -3,10 +3,10 @@ from __future__ import annotations
 from types import SimpleNamespace
 from typing import Any
 
-from fpa.domains.access.admin import AdminService
-from fpa.domains.audit.audit_logs import AuditLogService
-from fpa.kernel.runner import ActorView
-from fpa.kernel.scope import Scope
+from yuxin.domains.access.admin import AdminService
+from yuxin.domains.audit.audit_logs import AuditLogService
+from yuxin.kernel.runner import ActorView
+from yuxin.kernel.scope import Scope
 
 
 def _ctx(*, user_id: int = 1, super_admin: bool = False, permissions: set[str] | None = None):
@@ -92,7 +92,7 @@ def test_data_scope_projection_is_fully_chinese() -> None:
 
 
 def test_audit_projection_uses_capability_and_domain_chinese_labels() -> None:
-    from fpa.bootstrap import load_all
+    from yuxin.bootstrap import load_all
 
     load_all()
     row = AuditLogService._decorate(
@@ -110,8 +110,8 @@ def test_audit_projection_uses_capability_and_domain_chinese_labels() -> None:
 
 
 def test_required_detail_capabilities_exist() -> None:
-    from fpa.bootstrap import load_all
-    from fpa.kernel.capability import REGISTRY
+    from yuxin.bootstrap import load_all
+    from yuxin.kernel.capability import REGISTRY
 
     load_all()
     required = {

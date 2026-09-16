@@ -94,7 +94,7 @@
 | `cost.entries.record_fact(...)` | cost | production、warehouse、sales | **唯一**成本归集入口 |
 | `sales.receivables.create_from_delivery(...)` | sales | sales 自身 | 生成应收 |
 
-**`record_fact` 定稿签名**（cost 域；实测 `from fpa.domains.cost.entries import record_fact` 可导入）：
+**`record_fact` 定稿签名**（cost 域；实测 `from yuxin.domains.cost.entries import record_fact` 可导入）：
 
 ```python
 record_fact(
@@ -175,7 +175,7 @@ SELECT SUM(quantity_delta * unit_cost) / SUM(quantity_delta)
 并**响亮失败**（而不是静默记 0 元成本）——正是这次失败暴露了"出库行不带成本"这个缺口。
 "响亮失败"是这条口径能被讨论的前提。
 
-实现与实测：`backend/fpa/domains/cost/entries.py`（`record_fact` / `CostFact`）与
+实现与实测：`backend/yuxin/domains/cost/entries.py`（`record_fact` / `CostFact`）与
 `tools/cost_e2e.py` §12（**直调不经执行器** = 调用方形态，11 项断言）、§12b（`target_type=batch`）。
 
 **实现方式**：跨域 import 一律写在**函数体内**（不要模块级 import），避免环形导入；
@@ -384,22 +384,22 @@ SELECT COALESCE(SUM(total_quantity), 0)
 ## 3. 写能力必须声明回读函数（模板债，正在修）
 
 `kernel/runner.py::_reload_after` 要求：**任何返回 `resource_id` 的写能力，其 handler 必须可解析出
-`__fpa_load_by_id__(tx, *, scope, record_id)`**，否则抛 `INTERNAL_ERROR`。
+`__yuxin_load_by_id__(tx, *, scope, record_id)`**，否则抛 `INTERNAL_ERROR`。
 
 实测缺口（**已由 t13 修完**）：`domains/master_data/ponds_write.py` 的能力**没有**设置它，只有
 `tools/{runner,web,agent}_e2e.py` 在夹具里手动补挂 —— 也就是**生产路径下 master_data 的写能力全都会 500**。
 这是与"组合根缺失"同一形态的缺陷（夹具盖住了生产路径）。
 
 **现在的挂载入口是内核的 `Capability.loader=`**（`capability.__post_init__` 会
-`setattr(handler, "__fpa_load_by_id__", loader)`）。域**不要**自己写那个属性名字符串：
+`setattr(handler, "__yuxin_load_by_id__", loader)`）。域**不要**自己写那个属性名字符串：
 让五个域各写一遍，等于把这个"内核与执行器之间的内部约定"复制五份（内核那一份已经因为
-一次笔误 `__fpa_read_by_id__` 让幂等回放静默退化过）。
+一次笔误 `__yuxin_read_by_id__` 让幂等回放静默退化过）。
 
 * 写能力：`loader=<回读函数>`（且回读函数签名必须是 `(tx, *, scope, record_id)`）；
 * 读能力：**不要**声明 loader（`tests/test_architecture.py::test_loader_is_only_declared_where_it_can_be_used` 强制）。
 
 **对你的域的要求**：
-- 每个写能力的服务方法上显式挂 `__fpa_load_by_id__`；
+- 每个写能力的服务方法上显式挂 `__yuxin_load_by_id__`；
 - 你的 `tools/<域>_e2e.py` 必须**断言"不靠夹具补挂也能通过"**——否则你会把同一个缺陷复制一份。
 
 ---
@@ -455,8 +455,8 @@ SELECT COALESCE(SUM(total_quantity), 0)
 ## 5. 本机环境约定
 
 ```powershell
-# 统一使用默认库 fpa（**不要**给每个域新建库）
-$env:MYSQL_USER='fpa'; $env:MYSQL_PASSWORD='fpa_dev_password'
+# 统一使用默认库 yuxin（**不要**给每个域新建库）
+$env:MYSQL_USER='yuxin'; $env:MYSQL_PASSWORD='yuxin_dev_password'
 $env:MYSQL_ROOT_PASSWORD='1234'      # 只有 bootstrap/migrate reset 需要 root
 python tools\bootstrap_db.py
 python tools\migrate.py apply
@@ -464,7 +464,7 @@ python tools\migrate.py apply
 
 - **不要一域一库**（本行原先写作 `MYSQL_DATABASE='fpa_<你的域>'`，已被 负责人 推翻）：
   一域一库的代价高于并行隔离的收益 —— 它诱发过 `bootstrap_db.py` 的 `REVOKE ALL` 事故
-  （新库建账号时把 `fpa` 的授权一并收回），而且让集成验收（t9 的"69 条能力 ×
+  （新库建账号时把 `yuxin` 的授权一并收回），而且让集成验收（t9 的"69 条能力 ×
   21 条不变量"）无法在同一个库里核对。
 - **并发 e2e 靠探针数据 + 清理隔离，不靠分库**：每个 e2e 用自己前缀的探针行，结束时删干净；
   探针不干净就是缺陷，不是"换个库躲开"。
@@ -484,7 +484,7 @@ python tools\migrate.py apply
 **① 组合根必须可装载**（最高优先级，先跑这一条）：
 
 ```powershell
-python -c "import sys;sys.path.insert(0,'backend');import fpa.bootstrap as b;b.load_all();print('OK')"
+python -c "import sys;sys.path.insert(0,'backend');import yuxin.bootstrap as b;b.load_all();print('OK')"
 ```
 
 **为什么它排在 hygiene 之前**：`hygiene` 只判编码与换行（BOM / CRLF / 末行），
