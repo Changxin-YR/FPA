@@ -58,15 +58,23 @@ def main() -> int:
         page.click('[data-testid="agent-composer"] button[type="submit"]')
         print(f"已提问: {args.question}")
 
+        # 只认**助手**气泡：早先按"回复里不含问题前 8 字"来过滤，遇到答案里本来就含编号的
+        # 问题（如「PO-2026-001 还差多少钱没付？」）会把正确答案当成提问，永远等不到答案 ——
+        # 实测假超时。改为"提问前先记助手消息条数，只认新增的那条"。
+        assistants = page.locator(".agent-message--assistant")
+        n0 = assistants.count()
         reply = ""
         for _ in range(max(1, args.timeout // 3)):
             page.wait_for_timeout(3000)
-            rows = page.locator('[data-testid="agent-messages"] article')
-            texts = [rows.nth(i).inner_text().strip() for i in range(rows.count())]
-            answers = [t for t in texts if t and args.question[:8] not in t]
-            if answers:
-                reply = answers[-1]
-                break
+            rows = page.locator(".agent-message--assistant")
+            if rows.count() > n0:
+                try:
+                    text = rows.nth(rows.count() - 1).inner_text().strip()
+                except Exception:  # noqa: BLE001 - 面板重绘时元素可能瞬时失效
+                    continue
+                if text:
+                    reply = text
+                    break
             if page.locator('[data-testid="agent-error"]').count():
                 reply = page.locator('[data-testid="agent-error"]').inner_text().strip()
                 break
