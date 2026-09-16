@@ -42,17 +42,31 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "backend"))
 
-#: node runtime closure 的位置。
+#: node runtime closure 的位置（**含 `node_modules/@deepseek-ai/dsh` 的那一级目录**）。
 #:
-#: 它位于**早期版本目录**下的 SDK 源码里——这是本机的实际布局。写成模块级常量而不是
-#: 散在函数里，是为了将来 SDK 迁到本项目内时只需改这一处。
+#: 这份 SDK 源码不随本仓库分发，路径因机器而异，所以优先读环境变量。
+#: 变量名与 `agent-runtime/bin/run.cmd` 保持一致（**同一个键，两处都认**）：
+#:
+#:     $env:DSH_NODE_RUNTIME='<某一级目录>'
+#:     # 校验：<某一级目录>/node_modules/@deepseek-ai/dsh/lib/bin.js 必须存在
+#:     # 未设置时回落到历史本机布局（脱敏占位符）
+_closure_env = os.environ.get("DSH_NODE_RUNTIME", "").strip()
 NODE_CLOSURE = (
-    Path(r"<repo>\deepseek-harness\python\sdk-runtime")
-    / "src"
-    / "deepseek_harness_runtime"
-    / "runtime"
-    / "node"
+    Path(_closure_env)
+    if _closure_env
+    else (
+        Path(r"<repo>\deepseek-harness\python\sdk-runtime")
+        / "src"
+        / "deepseek_harness_runtime"
+        / "runtime"
+        / "node"
+    )
 )
+
+#: SDK 的 **Python** 包路径（`deepseek_harness` 所在目录）。用 `pip install -e` 装过就不需要设。
+_sdk_env = os.environ.get("DSH_SDK_PYTHONPATH", "").strip()
+if _sdk_env:
+    sys.path.insert(0, _sdk_env)
 
 #: 传给子进程的环境变量白名单。**只放运行必需的。**
 _ENV_ALLOWLIST = {
@@ -85,6 +99,10 @@ _ENV_ALLOWLIST = {
     # 凡是白名单，就要显式列出每一个必需的键——包括那些"显然会有"的。
     "DEEPSEEK_API_KEY",
     "DEEPSEEK_BASE_URL",
+    # 载体与源码 checkout 的位置：`agent-runtime/bin/run.cmd` 要用它们找入口。
+    # 与上面的道理一样——白名单里的键，少一个子进程就少一个能力。
+    "DSH_NODE_RUNTIME",
+    "AGENT_HARNESS_ROOT",
 }
 
 FAILURES = 0
@@ -164,7 +182,15 @@ def main() -> int:
     global FAILURES
 
     dsh_home = str(ROOT / ".dsh-home")
-    harness_root = r"<harness-runtime>"
+    #: 子进程的工作目录（SDK 用它当 `cwd=`，**必须是真实存在的目录**）。
+    #: 优先级：AGENT_HARNESS_ROOT（harness 源码 checkout，run.cmd 也认这个键）
+    #: → DSH_NODE_RUNTIME（只给了闭包目录时够用）→ 本仓库根目录。
+    #: 早期版本这里写的是脱敏占位符 `<harness-runtime>`，本机不存在 → WinError 267。
+    harness_root = (
+        os.environ.get("AGENT_HARNESS_ROOT", "").strip()
+        or os.environ.get("DSH_NODE_RUNTIME", "").strip()
+        or str(ROOT)
+    )
 
     print("=== 0. 前置条件 ===")
     check("DSH_HOME 存在", Path(dsh_home).is_dir(), dsh_home)
@@ -177,7 +203,8 @@ def main() -> int:
     check(
         "node runtime closure 完整",
         closure_bin.is_file(),
-        f"缺少 {closure_bin}。SDK 默认只找生产 exe，本机没有，所以必须用 node 载体",
+        f"缺少 {closure_bin}。SDK 默认只找生产 exe，本机没有，所以必须用 node 载体；"
+        "可用环境变量 DSH_NODE_RUNTIME 指向含 node_modules/@deepseek-ai/dsh 的那一级目录",
     )
     # 凭据判断从"某个文件存在"改为"能真正取到 key"——因为真正生效的是后者。
     # 之前那条检查报 PASS 而模型报 401，正是因为查的是一个已失效的旧文件。
@@ -199,6 +226,7 @@ def main() -> int:
         from deepseek_harness import DeepSeekHarness
     except ImportError as exc:
         print(f"  FAIL  无法导入 deepseek_harness：{exc}")
+        print("        未 `pip install -e` 时，可用 DSH_SDK_PYTHONPATH 指向该包的父目录")
         return 1
     print("  PASS  已导入 deepseek_harness")
 
