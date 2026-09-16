@@ -82,7 +82,7 @@ function closeMobileNav(): void {
             <span aria-hidden="true">{{ mobileNavOpen ? '×' : '☰' }}</span>
           </button>
           <div class="app-shell__breadcrumb">
-            <span>FPA 运营中心</span>
+            <span>渔芯运营中心</span>
             <i aria-hidden="true">/</i>
             <strong>{{ pageTitle }}</strong>
           </div>

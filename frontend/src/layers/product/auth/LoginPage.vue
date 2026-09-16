@@ -92,7 +92,7 @@ async function submit(): Promise<void> {
 <template>
   <main class="login">
     <form class="login__card" data-testid="login-form" @submit.prevent="submit">
-      <h1>FPA管理系统</h1>
+      <h1>渔芯AI水产养殖一体化系统</h1>
       <p class="login__subtitle">请使用您的账号登录</p>
 
       <label class="login__field">

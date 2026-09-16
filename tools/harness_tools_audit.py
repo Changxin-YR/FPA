@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""把"FPA 业务工具到底有没有挂进 Harness"和"能逃逸的内建工具有没有被关掉"变成
+"""把"渔芯业务工具到底有没有挂进 Harness"和"能逃逸的内建工具有没有被关掉"变成
 **一条可执行判据**。
 
 ## 这个文件为什么存在（t11 的根因）
@@ -14,8 +14,8 @@
 于是 `agent-runtime/cordis.patch.yml` 里的 1 条 `insert` 与 52 条 `disabled` **一条都没
 生效**。后果有两面，而且两面都很安静：
 
-* 模型手里没有任何 FPA 业务工具 —— 它于是**自己拼 HTTP** 打后端网关（真实自述：
-  「本会话里我没有挂载 FPA 的业务工具，所以是直接用系统给的 X-Agent-Context 凭据打
+* 模型手里没有任何 渔芯业务工具 —— 它于是**自己拼 HTTP** 打后端网关（真实自述：
+  「本会话里我没有挂载 渔芯的业务工具，所以是直接用系统给的 X-Agent-Context 凭据打
   后端网关 `GET /api/v1/agent/tools` …」）。业务数据是真的，但路径绕过了设计；
 * `tool-web`（能发任意 HTTP）、`tool-fs`（能读文件）、`tool-pwsh`（能执行命令）**全都开着**
   —— "禁止任意 Shell / 文件系统 / 网络 / 子代理"这条安全边界整条不在。
@@ -32,7 +32,7 @@
    （白名单 = `tools` 注册表服务本身 + `fpa-biz-tools`）。这条是"防止下一版 bundle
    悄悄挂上新的逃逸工具"的兜底 —— 前三条都过、这一条仍可能红；
 5. `system-prompt` 行带 `includeHarnessIdentity: false` + 非空 `persona`
-   —— 人格归 FPA，而不是 Harness 默认的编程助手。
+   —— 人格归渔芯，而不是 Harness 默认的编程助手。
 
 上面 5 条读的是**配置层**。`--tools` 读的是**运行时终点**：直接从会话日志的
 `request/header` 事件里取 `system` 与 `tools` —— 那是 agent-loop 在每次请求前写下的
@@ -238,7 +238,7 @@ def audit(rows: list[dict], outcome: AuditOutcome) -> None:
     if biz is None:
         outcome.fail(
             "合成树里没有 `fpa-biz-tools` 行：运行时 patch 没被加载 → 模型不会拿到任何 "
-            "FPA 业务工具（它会自己手工拼 HTTP 绕过设计）"
+            "渔芯业务工具（它会自己手工拼 HTTP 绕过设计）"
         )
     else:
         if biz.get("disabled") is True:
@@ -321,8 +321,8 @@ def audit(rows: list[dict], outcome: AuditOutcome) -> None:
                 "Harness 那句 'You are an AI agent powered by DeepSeek Harness.' 仍在，"
                 "模型会自称 Harness 助手"
             )
-        if "FPA管理系统" not in persona:
-            outcome.fail("persona 文本里没有出现 FPA管理系统：看起来不是部署方的人格")
+        if "渔芯AI水产养殖一体化系统" not in persona:
+            outcome.fail("persona 文本里没有出现 渔芯AI水产养殖一体化系统：看起来不是部署方的人格")
         if "塘小助" not in persona:
             outcome.fail("persona 里没有「塘小助」：这不像本项目的部署人格")
         if "{{" in persona:
@@ -449,7 +449,7 @@ def main(argv: list[str]) -> int:
             for item in report:
                 print()
                 print(f"会话 {item['session']}：工具 {item['tool_count']} 个")
-                print(f"  系统提示词是 FPA 的（含「塘小助」）：{item['system_is_fpa']}")
+                print(f"  系统提示词是 渔芯的（含「塘小助」）：{item['system_is_fpa']}")
                 print(f"  仍含 Harness 身份句：{item['harness_identity_present']}")
                 print(f"  逃逸类工具（应为空）：{item['escape_tools']}")
                 print(f"  当前迭代实际调用：{item['calls'] or '（无）'}")
@@ -464,7 +464,7 @@ def main(argv: list[str]) -> int:
             print(f"结果：{len(bad)} 份会话不合格（有逃逸工具 / 人格不对 / 没有业务工具）")
             return 1
         print()
-        print("结果：模型实际拿到了 FPA 业务工具、且清单里没有任何逃逸类工具")
+        print("结果：模型实际拿到了 渔芯业务工具、且清单里没有任何逃逸类工具")
         return 0
 
     outcome = AuditOutcome()
@@ -527,7 +527,7 @@ def main(argv: list[str]) -> int:
     if as_json:
         print(json.dumps(summary, ensure_ascii=False, indent=2))
     else:
-        print("=== FPA Harness 工具挂载 / 逃逸面审计 ===")
+        print("=== 渔芯 Harness 工具挂载 / 逃逸面审计 ===")
         print(f"运行时 patch：{summary['patch']}")
         print(
             "反向对照：不给 --patch -> 业务工具 "
@@ -543,7 +543,7 @@ def main(argv: list[str]) -> int:
                 print(f"  FAIL  {violation}")
         else:
             print("  PASS  1) 业务工具已挂载   2) 包只含工具源   3) 逃逸行全部关闭")
-            print("  PASS  4) 无白名单外的工具提供者   5) 人格归 FPA管理系统 且不使用提示词变量")
+            print("  PASS  4) 无白名单外的工具提供者   5) 人格归 渔芯AI水产养殖一体化系统 且不使用提示词变量")
 
     if not outcome.proven:
         print("\n结果：UNPROVEN —— 判据没能执行完，**不等于通过**")

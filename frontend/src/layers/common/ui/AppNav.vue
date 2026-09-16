@@ -101,9 +101,9 @@ function logout(): void {
 <template>
   <aside class="app-nav" data-testid="app-nav">
     <RouterLink class="app-nav__brand" to="/workbench" aria-label="返回工作台" @click="emit('navigate')">
-      <span class="app-nav__brand-mark" aria-hidden="true">F</span>
+      <span class="app-nav__brand-mark" aria-hidden="true">渔</span>
       <span>
-        <strong class="app-nav__title">FPA管理系统</strong>
+        <strong class="app-nav__title">渔芯AI水产养殖一体化系统</strong>
         <small>养殖运营平台</small>
       </span>
     </RouterLink>

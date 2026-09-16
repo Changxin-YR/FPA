@@ -82,7 +82,7 @@ async function submit(): Promise<void> {
 <template>
   <main class="first-password">
     <form class="first-password__card" data-testid="first-password-form" @submit.prevent="submit">
-      <h1>FPA管理系统</h1>
+      <h1>渔芯AI水产养殖一体化系统</h1>
       <p class="first-password__subtitle">首次登录需要修改初始密码</p>
 
       <label class="first-password__field">

@@ -365,7 +365,7 @@ def cmd_reset(connection: pymysql.Connection) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="FPA 迁移 runner（唯一版本）")
+    parser = argparse.ArgumentParser(description="渔芯 迁移 runner（唯一版本）")
     parser.add_argument(
         "command",
         choices=("status", "apply", "verify", "reset"),

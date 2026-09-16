@@ -1,6 +1,6 @@
 # @fpa/dsh-biz-tools
 
-把 FPA 的业务能力注册成 **DeepSeek Harness 的类型化工具**：**每一条能力一个真工具、真 JSON Schema**。
+把 渔芯的业务能力注册成 **DeepSeek Harness 的类型化工具**：**每一条能力一个真工具、真 JSON Schema**。
 
 ## 它解决什么问题
 

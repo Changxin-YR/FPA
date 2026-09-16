@@ -12,7 +12,7 @@
 
 本仓库 profile patch 是空数组、家目录层不存在、`patches=()` 又不给覆盖层 ——
 于是 `insert` 与 52 条 `disabled` 一条都没生效。后果是模型**没有业务工具却留着
-`tool-web`**，于是它自己拼 HTTP 打后端网关（实测自述：「本会话里我没有挂载 FPA 的业务
+`tool-web`**，于是它自己拼 HTTP 打后端网关（实测自述：「本会话里我没有挂载 渔芯的业务
 工具…」）。业务数据是真的，但路径绕过了设计、安全边界整条不在，
 而**应用启动正常、pytest 全绿、浏览器 e2e 也能过**。
 
@@ -295,7 +295,7 @@ def test_explicit_setting_wins_and_missing_file_is_loud() -> None:
 
 
 def test_patch_file_states_the_business_tool_package() -> None:
-    """patch 文件必须**解析后**满足：一个 insert + 禁用列表 + FPA 人格。
+    """patch 文件必须**解析后**满足：一个 insert + 禁用列表 + 渔芯人格。
 
     ⚠️ 这里读的是结构，不是文本。第一版用 `"{{" not in text` 这种字符串搜索，
     结果命中了注释里"本文件不许出现 `{<!-- -->{`"那句话 —— 判据读散文就会读错。
@@ -330,7 +330,7 @@ def test_patch_file_states_the_business_tool_package() -> None:
     config = prompt_row[0].get("config") or {}
     assert config.get("includeHarnessIdentity") is False, "必须关掉 Harness 写死的身份句"
     persona = str(config.get("persona") or "")
-    assert "FPA管理系统" in persona and "塘小助" in persona, "人格必须是 FPA 管理系统的，不是 Harness 默认编程助手"
+    assert "渔芯AI水产养殖一体化系统" in persona and "塘小助" in persona, "人格必须是 FPA 管理系统的，不是 Harness 默认编程助手"
     # `{{` 会被 Harness 当提示词变量严格解析，未注册的变量让整轮渲染报错。
     assert "{{" not in persona, "persona 里不许出现提示词变量引用"
 

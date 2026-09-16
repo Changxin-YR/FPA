@@ -1,12 +1,12 @@
-# 本文件是 FPA 业务侧运行时配置的**唯一下发点**：由 `backend/fpa/harness/session.py`
+# 本文件是 渔芯业务侧运行时配置的**唯一下发点**：由 `backend/fpa/harness/session.py`
 # 通过 SDK 的 `patches=` 传给 Harness 子进程（见 `_create_session`）。不给这个文件，
-# 子进程就退回 Harness 出厂形态 —— **没有任何 FPA 业务工具、也没有下面这条安全边界**。
+# 子进程就退回 Harness 出厂形态 —— **没有任何 渔芯业务工具、也没有下面这条安全边界**。
 #
 # 它做三件事：
 #   1) `insert` 把本插件注入 Harness —— 业务侧唯一的工具来源；
-#   2) 逐条 `disabled: true` 掉 Harness 的内建工具，使模型**除了** FPA 业务工具之外
+#   2) 逐条 `disabled: true` 掉 Harness 的内建工具，使模型**除了** 渔芯业务工具之外
 #      拿不到任何能执行命令、读写文件、访问网络或开子代理的能力；
-#   3) 覆盖 `system-prompt` 行的部署人格，让助手是 FPA 的「塘小助」而不是 Harness 的
+#   3) 覆盖 `system-prompt` 行的部署人格，让助手是渔芯的「塘小助」而不是 Harness 的
 #      默认编程助手。
 #
 # ## 第 2 条为什么属于这里（部署层）而不是插件包
@@ -43,7 +43,7 @@
 #
 # 它做两件事：
 #   1) `insert` 把本插件注入 Harness —— 业务侧唯一的工具来源；
-#   2) 逐条 `disabled: true` 掉 Harness 的内建工具，使模型**除了** FPA 业务工具之外
+#   2) 逐条 `disabled: true` 掉 Harness 的内建工具，使模型**除了** 渔芯业务工具之外
 #      拿不到任何能执行命令、读写文件、访问网络或开子代理的能力。
 #
 # ## 并集来源（两份取并集，少任何一条都意味着多一条逃逸路径）
@@ -69,7 +69,7 @@
         gatewayUrl: !!js process.env.FPA_AGENT_GATEWAY_URL ?? ''
         contextToken: !!js process.env.FPA_AGENT_CONTEXT_TOKEN ?? ''
 
-# --- 人格：把 deployment:persona 从 Harness 默认编程助手换成 FPA 助手 ----------------
+# --- 人格：把 deployment:persona 从 Harness 默认编程助手换成 渔芯助手 ----------------
 #
 # 为什么不装 `@deepseek-ai/dsh-persona`：那一行是**仅限 agent preset 作用域**的遮蔽行，
 # 挂在全局会与 prompt 注册表自己的 persona 注册冲突并**加载失败**（它的 README 把这条
@@ -90,13 +90,13 @@
   config:
     includeHarnessIdentity: false
     persona: >-
-      你是 FPA管理系统的智能助手「塘小助」，服务对象是养殖场的经营人员。
+      你是 渔芯AI水产养殖一体化系统的智能助手「塘小助」，服务对象是养殖场的经营人员。
 
-      你的职责：用 FPA管理系统的业务工具查询与办理塘口、库存、养殖、销售、采购、成本和权限相关的事务。
+      你的职责：用 渔芯AI水产养殖一体化系统的业务工具查询与办理塘口、库存、养殖、销售、采购、成本和权限相关的事务。
 
       六条工作纪律：
 
-      1. FPA管理系统的业务数据只能来自系统业务工具。工具返回什么就说什么，不补充、不推测、不猜测
+      1. 渔芯AI水产养殖一体化系统的业务数据只能来自系统业务工具。工具返回什么就说什么，不补充、不推测、不猜测
          数字。没有对应工具的问题，直接说明「我现在查不到」，不要用常识凑一个答案。
       2. 工具返回的 kind 决定你怎么说：executed 才是已经写进系统的；confirmation_required 是
          还没写、等用户确认的草稿。待确认时停下等用户，不要把它说成已经办好。

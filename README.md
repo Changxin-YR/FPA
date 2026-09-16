@@ -1,4 +1,4 @@
-# FPA
+# 渔芯AI水产养殖一体化系统
 
 水产养殖企业的生产与经营管理后台。后端是 Python（Flask + PyMySQL + MySQL），前端是
 Vue 3 + TypeScript，另外接了一层能直接读写业务数据的智能体（DeepSeek Harness + 业务工具）。

@@ -1,6 +1,6 @@
 # Business Capability Registry — 权威清单 v1
 
-> **本文件是 FPA 业务能力的唯一权威来源。** 路由、请求/响应 schema、OpenAPI、前端字段元数据、权限码、DataScope 谓词、幂等策略、确认闸门、审计字段、Agent Tool、TS 类型——全部由本文件**派生**，不得在别处二次声明。
+> **本文件是渔芯AI水产养殖一体化系统业务能力的唯一权威来源。** 路由、请求/响应 schema、OpenAPI、前端字段元数据、权限码、DataScope 谓词、幂等策略、确认闸门、审计字段、Agent Tool、TS 类型——全部由本文件**派生**，不得在别处二次声明。
 >
 > 服从：`docs/ARCHITECTURE.md`（架构准则，§1 公理、§2 边界、§4 fail-closed、§5 Agent）与 `docs/INTERFACES.md`（接口契约，§2 元数据、§6 scope、§7 版本、§8 分页）。
 > 冲突时以 `ARCHITECTURE.md` 为准；本文件与 `INTERFACES.md` 的冲突一律登记在第 7 节待裁决，不自行裁定。
@@ -641,7 +641,7 @@ requires_idempotency_key  ⟺  (kind == "create")  ∨  (confirmation == "always
 > | 前端菜单与按钮（L1 过滤） | `data.capabilities[]` | **不断**（同一响应，`:57`） |
 > | CI 断言生成物逐字节一致（`INTERFACES.md:309`） | `types.gen.ts` | **不断**（与端点数无关） |
 > | OpenAPI 契约一致性 | `docs/openapi.json` | **不断，且反向改善**——保留它反而要求 OpenAPI 记录一个 `INTERFACES.md` 里不存在的端点，制造契约冲突（`DECISIONS.md` Q1 刚确立"契约里每一个字面值都必须可追溯"） |
-> | 任何现存消费者 | — | **不存在**——FPA 当前只有 3 个 `.md`，无任何代码 |
+> | 任何现存消费者 | — | **不存在**——渔芯当前只有 3 个 `.md`，无任何代码 |
 >
 > **结论**：删除后**没有任何业务路径会断**，且会消除一处与 `INTERFACES.md` 的契约冲突。
 >

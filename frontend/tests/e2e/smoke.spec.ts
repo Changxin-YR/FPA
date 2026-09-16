@@ -69,7 +69,7 @@ const META_FIXTURE = {
 
 test('登录页渲染并显示中文标题', async ({ page }) => {
   await page.goto('/auth/login')
-  await expect(page.locator('h1')).toHaveText('FPA管理系统')
+  await expect(page.locator('h1')).toHaveText('渔芯AI水产养殖一体化系统')
   await expect(page.getByTestId('login-form')).toBeVisible()
 })
 

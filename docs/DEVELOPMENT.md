@@ -1,4 +1,4 @@
-# FPA 开发说明
+# 渔芯AI水产养殖一体化系统 开发说明
 
 > 本地环境、加一个域的固定步骤、以及实际踩过的坑。先读本文，再读 `docs/ARCHITECTURE.md`；
 > 产品能力清单在 `docs/CAPABILITY_REGISTRY.md`。
