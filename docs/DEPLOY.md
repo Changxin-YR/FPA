@@ -224,3 +224,34 @@ ln -sfn /opt/adp/releases/<上一个 release> /opt/yuxin/current.tmp \
 - 触发器由 `yuxin@localhost` 创建，DEFINER 与该账号一致，不会出现跨库 `1142 TRIGGER command denied`。
 - nginx 的 SPA 回落必须是 `try_files $uri /index.html =404;`——只写 `$uri =404` 会让
   `/yuxin/auth/login` 这类深链接返回 nginx 404（实测踩到）。
+
+### 线上 agent（塘小助）接线
+
+`/yuxin/` 与老 `/fpa/` **共用**同一个 DSH home（`/var/lib/adp/agent-sidecar`）与运行时 install
+（`/opt/adp-agent-runtime-20260907`），接线沿用老站约定，只改 patch 路径与端口：
+
+| 键 | 值 |
+|---|---|
+| `AGENT_DSH_HOME` | `/var/lib/adp/agent-sidecar` |
+| `AGENT_DSH_BIN` | `/opt/adp-agent-runtime-20260907/node_modules/.bin/dsh` |
+| `AGENT_HARNESS_ROOT` | `/opt/adp-agent-runtime-20260907` |
+| `AGENT_HARNESS_PATCH` | `/opt/yuxin/current/agent-runtime/cordis.patch.yml` |
+| `AGENT_PROFILE` / `DSH_RUNTIME_MODE` | `sdk` / `node` |
+| `AGENT_MODEL` / `DEEPSEEK_BASE_URL` | `qwen-plus` / 阿里百炼兼容端点（照抄 `/etc/fpa/fpa.env`） |
+
+安装步骤（**三处都要，缺一处只会静默降级成「塘小助暂时不可用」**）：
+
+1. **Python SDK**：把 `deepseek_harness` 与 `deepseek_harness_runtime` 从
+   `/opt/deepseek-harness-20260907/python/{sdk/src,sdk-runtime/src}` 复制进 venv 的 site-packages，
+   并在 `deepseek_harness_runtime/runtime/node/node_modules/@deepseek-ai/dsh` 建软链指向运行时里的 dsh 包。
+2. **插件包必须装进「运行时 install」**：`/opt/adp-agent-runtime-20260907/node_modules/@yuxin/dsh-biz-tools/`。
+   原因：ESM 解析是从 **loader 自己的位置**逐级往上找，`NODE_PATH`（只对 CJS 生效）与 profile 里那份都救不了。
+   症状是 `ERR_MODULE_NOT_FOUND: Cannot find package '@yuxin/dsh-biz-tools' imported from
+   .../cordis-plugin-loader/lib/index.js`，而上层只显示「智能助手通信异常」。
+3. **插件同时装一份到 profile**（`<DSH_HOME>/profiles/sdk/node_modules/@yuxin/dsh-biz-tools/`），
+   且 manifest 必须是**只含 insert 的发布副本**（照抄整份部署层 patch 会被 `harness_tools_audit` 判红）。
+
+`DEEPSEEK_BASE_URL` 由后端逐次显式注入子进程（`session.py::_resolve_base_url`）——
+兼容端点（阿里百炼）部署必须依赖这条转发，否则模型侧鉴权失败而表现成**空回复**。
+
+**自检**：登录 `https://23331.cloud/yuxin/` → 打开「塘小助」问业务问题（实测答出「当前一共有 6 个塘口」）。
