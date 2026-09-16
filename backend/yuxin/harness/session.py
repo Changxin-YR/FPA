@@ -160,6 +160,18 @@ def _resolve_api_key() -> str:
     return os.environ.get("DEEPSEEK_API_KEY", "") or _machine_env("DEEPSEEK_API_KEY")
 
 
+def _resolve_base_url() -> str:
+    """模型端点覆盖（env `DEEPSEEK_BASE_URL`）。
+
+    为什么必须转发：SDK 默认打 `api.deepseek.com`，但部署方可能用**兼容端点**
+    （生产用阿里百炼 `dashscope.aliyuncs.com/compatible-mode/v1` 跑 qwen-plus）。
+    不转发时症状是：key 明明配了，模型侧却回 401/鉴权失败 —— 而 `run()` 把它变成
+    **空回复 + finish_reason=error**，上层会当成一次成功的空回答（与 `DEEPSEEK_API_KEY`
+    那条注释里记的是同一类失败）。本地不设这个变量时行为完全不变。
+    """
+    return os.environ.get("DEEPSEEK_BASE_URL", "").strip()
+
+
 def resolve_harness_patch(settings: Settings) -> str:
     """解析要传给 Harness 子进程的运行时 patch 文件。
 
@@ -889,6 +901,10 @@ class HarnessSessionManager:
         api_key = _resolve_api_key()
         if api_key:
             env["DEEPSEEK_API_KEY"] = api_key
+        # 端点覆盖（兼容端点部署，如阿里百炼跑 qwen-plus）；不设则保持 SDK 默认端点。
+        base_url = _resolve_base_url()
+        if base_url:
+            env["DEEPSEEK_BASE_URL"] = base_url
 
         # ★ 载体选择：**用 `dsh_bin` 显式指定，不靠 `DSH_RUNTIME_MODE`**（实测踩到）
         #

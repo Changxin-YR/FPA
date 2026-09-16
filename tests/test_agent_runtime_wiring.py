@@ -725,3 +725,25 @@ def test_a_plain_answer_still_comes_back_as_assistant() -> None:
         "conversation_id": "conv-1",
         "message": "3 号塘最近 7 天共投喂 210kg，日均 30kg。",
     }
+
+
+# ---------------------------------------------------------------------------
+# ⑦ 兼容端点：`DEEPSEEK_BASE_URL` 必须转发进子进程
+# ---------------------------------------------------------------------------
+
+def test_resolve_base_url_reads_process_env(monkeypatch) -> None:
+    """生产用阿里百炼兼容端点跑 `qwen-plus`，不转发 base_url 会让模型侧鉴权失败。
+
+    失败形态是**空回复 + finish_reason=error**（不是异常），上层会把它当成一次
+    成功的空回答 —— 与 `DEEPSEEK_API_KEY` 那条注释记的是同一类
+    「配置明明有、子进程就是读不到」。本地不设该变量时行为必须完全不变。
+    """
+    from yuxin.harness import session as session_module
+
+    endpoint = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    monkeypatch.setenv("DEEPSEEK_BASE_URL", endpoint)
+    assert session_module._resolve_base_url() == endpoint
+
+    monkeypatch.delenv("DEEPSEEK_BASE_URL", raising=False)
+    assert session_module._resolve_base_url() == ""
+
