@@ -52,14 +52,14 @@ Vue 3 + TypeScript，另外接了一层能直接读写业务数据的智能体�
 需要一个可用的 MySQL 实例（默认 `127.0.0.1:3306`）。
 
 ```powershell
-git clone git@github.com:Changxin-YR/FPA.git
-cd FPA
+git clone git@github.com:Changxin-YR/yuxin.git
+cd yuxin
 ```
 
 **1. 建库建号**
 
 ```powershell
-cd FPA
+cd yuxin
 $env:MYSQL_ROOT_PASSWORD='<你的 root 密码>'    # bootstrap 需要 root
 python tools\bootstrap_db.py                   # 幂等
 ```
