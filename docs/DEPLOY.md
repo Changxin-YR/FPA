@@ -255,3 +255,22 @@ ln -sfn /opt/adp/releases/<上一个 release> /opt/yuxin/current.tmp \
 兼容端点（阿里百炼）部署必须依赖这条转发，否则模型侧鉴权失败而表现成**空回复**。
 
 **自检**：登录 `https://23331.cloud/yuxin/` → 打开「塘小助」问业务问题（实测答出「当前一共有 6 个塘口」）。
+
+### `/fpa/` 已并入 `/yuxin/`（2026-09-16）
+
+老站点不再单独运行，但**老链接继续可用**：
+
+- nginx：`/etc/nginx/snippets/fpa-location.conf` 已改为 301 跳转（`/fpa/<path>` → `/yuxin/<path>`），
+  原配置备份为同目录 `fpa-location.conf.bak-retire`；
+- 服务：`systemctl disable --now fpa-next.service`（**发布文件与 `/etc/fpa/fpa.env` 均保留**）。
+
+恢复老站（回滚）：
+
+```bash
+cp /etc/nginx/snippets/fpa-location.conf.bak-retire /etc/nginx/snippets/fpa-location.conf
+systemctl enable --now fpa-next.service && nginx -t && systemctl reload nginx
+```
+
+> `/yuxin/` 的智能体**不依赖**老服务：它用自己的 `/etc/yuxin/yuxin.env`；与老站共享的只有 DSH home
+> （`/var/lib/adp/agent-sidecar`）与运行时 install（`/opt/adp-agent-runtime-20260907`），两者都与
+> `fpa-next.service` 无关。实测停服后塘小助照常回答（「当前一共有 6 个塘口」）。
