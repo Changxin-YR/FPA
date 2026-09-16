@@ -747,3 +747,30 @@ def test_resolve_base_url_reads_process_env(monkeypatch) -> None:
     monkeypatch.delenv("DEEPSEEK_BASE_URL", raising=False)
     assert session_module._resolve_base_url() == ""
 
+
+# ---------------------------------------------------------------------------
+# ⑧ 身份必须由服务端逐轮注入（模型没有"我是谁"的工具）
+# ---------------------------------------------------------------------------
+
+class _FakeActor:
+    """只带 `actor_context()` 需要读的字段。"""
+
+    username = "demo"
+    role_codes = frozenset({"super_admin"})
+    permissions = frozenset({"pond.read", "pond.write"})
+
+
+def test_actor_context_carries_server_side_identity() -> None:
+    """`auth.me` 是固定路由、**不是 agent 工具**，所以身份只能由服务端注入。
+
+    实测缺陷（2026-09-16 线上巡检）：登录 `demo` 问「我是谁」，模型自己猜了个 user_id 去调
+    `access_user.get`，回复「我是张操作（经办人），用户名 test-operator，角色和数据范围为空」
+    —— 把库里另一个账号当成了自己。这条测试钉住"身份来自服务端、且明确要求以此为准"。
+    """
+    from yuxin.web.agent_turn import actor_context
+
+    text = actor_context(_FakeActor())
+    assert "demo" in text
+    assert "super_admin" in text
+    assert "以此为准" in text
+

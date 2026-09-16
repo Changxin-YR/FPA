@@ -79,6 +79,24 @@ CONTEXT_TOKEN_ENV = "YUXIN_AGENT_CONTEXT_TOKEN"
 _API_PREFIX = "/api/v1"
 
 
+def actor_context(actor: Any) -> str:
+    """逐轮注入的**服务端权威身份**，与 `[当前页面]` 同一条范式。
+
+    为什么必须有：`auth.me` 是**固定路由、不是 agent 工具**，模型手里没有"我是谁"的工具。
+    实测（2026-09-16 线上巡检）：登录 `demo` 问「我是谁」，模型自己猜了一个 user_id 去调
+    `access_user.get`，结果回复「我是张操作（经办人），用户名 test-operator，角色和数据范围为空」
+    —— 它把库里另一个账号当成了自己。身份属于"服务端已知、模型不该推测"的信息，所以直接注入。
+    """
+    roles = ",".join(sorted(getattr(actor, "role_codes", ()) or ())) or "（无）"
+    permissions = getattr(actor, "permissions", ()) or ()
+    return (
+        f"[当前登录用户] {getattr(actor, 'username', '')}；角色：{roles}；"
+        f"权限条数：{len(permissions)}。"
+        "回答「我是谁 / 我有什么权限 / 我的数据范围」时**以此为准**，"
+        "不要用工具去猜或套用列表里的其他账号。"
+    )
+
+
 def _tool_name_index(registry: Any) -> dict[str, Any]:
     """`工具名 → Capability` 的反查表。
 
@@ -366,7 +384,8 @@ def build_agent_turn_stream_lines(
 
     prompt = message
     if page_context:
-        prompt = f"{message}\n\n[当前页面] {page_context}"
+        prompt = f"{prompt}\n\n[当前页面] {page_context}"
+    prompt = f"{prompt}\n\n{actor_context(actor)}"
 
     # 子进程事件 → NDJSON 行的缓冲。回调在 SDK 的接收线程里执行，生成器在请求线程里消费，
     # 所以用一个 list + 逐行弹出（同一个进程内、GIL 保证 append/pop 原子）。
@@ -558,7 +577,8 @@ def build_agent_turn_handler(
 
         prompt = message
         if page_context:
-            prompt = f"{message}\n\n[当前页面] {page_context}"
+            prompt = f"{prompt}\n\n[当前页面] {page_context}"
+        prompt = f"{prompt}\n\n{actor_context(actor)}"
 
         turn = manager.run(
             prompt=prompt,
