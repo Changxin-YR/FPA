@@ -807,7 +807,7 @@ requires_idempotency_key  ⟺  (kind == "create")  ∨  (confirmation == "always
 | `password` | string | ✔ | 1–128 | 密码 |
 
 依据：旧 `product/auth/routes.py:79-82`（字段名 `identifier` / `password`）。
-**不继承**：早期版本 `X-FPA-Client: mobile` 分支把裸 token 塞进响应体（`product/auth/routes.py:91-92`），移动端已砍（`ARCHITECTURE.md:339`）。
+**不继承**：早期版本的移动端专属请求头分支（`X-…-Client: mobile`）把裸 token 塞进响应体（`product/auth/routes.py:91-92`），移动端已砍（`ARCHITECTURE.md:339`）。
 
 **`auth.password.change`**
 
@@ -1741,7 +1741,7 @@ DataScope、不变量与服务端 HITL 管控）；身份生命周期里唯一�
 | **注册申请与审核** | `registration_applications` 表；`features/registration/` 92 行；`features/account_review/` 227 行；4 个端点；版本号重提上限 3（`早期版本：mysql_store.py:258-259`） | **不做** | 由管理员建号（`access.user.create`）替代。旧流程有"重提不超过 3 次"的重试语义（`REAPPLY_LIMIT_REACHED`），对本项目价值低、表与状态多 |
 | **更正/冲销类能力（`reverse`）** | `sales_receipt_reversal_store.py`、`purchase_payment_reversal_store.py`、`cost_expense_store.py:173` 的 `COST_REVERSAL_NOT_ALLOWED` | **不做** | 同更正单 |
 | **多组织（`organizations` 多租户）** | `organizations` 表 + `organization_id` 贯穿约 40 张表 | **保留结构、单条数据** | 表与字段留在 schema 里（DataScope 的 `farm_id` 解析依赖它），但种子只建 1 家企业。理由：`早期版本：work_item_notifications.py:20-28` 的注释承认"当前 schema 无法识别非管理员农场的企业归属"，多租户是早期版本没做透的部分 |
-| **移动端 / 小程序 / Electron / 桌面端** | 旧仓库有 `miniprogram/`、`mobile/`、`fpa_phone/`、`frontend` 的 Electron 打包 | **不做** | `ARCHITECTURE.md:339`"早期版本有四端并存，其中两端是废弃的半成品"。连带删除 `auth.login` 的 `X-FPA-Client: mobile` 分支（`早期版本：product/auth/routes.py:91-92`） |
+| **移动端 / 小程序 / Electron / 桌面端** | 旧仓库有 `miniprogram/`、`mobile/`、一个手机端目录和 `frontend` 的 Electron 打包 | **不做** | `ARCHITECTURE.md:339`"早期版本有四端并存，其中两端是废弃的半成品"。连带删除 `auth.login` 的移动端专属请求头分支（`早期版本：product/auth/routes.py:91-92`） |
 | **`disputed` 状态、`pending/rejected/retired/must_change_password` 用户状态** | `早期版本：011_purchase_payables.sql:20`、`013_sales_receivables.sql:22`、`004_enterprise_governance_foundation.sql:4` | **删除** | 全仓无写入点（`purchase_store.py`/`sales_store.py` 的 `set_order_status` 从不写 `disputed`）；用户状态由 `access.user.status` 收拢为 `active`/`disabled` |
 | **`favicon`/软删除/回收站/收藏/操作日志导出** | 无对应实现或仅前端占位 | **不做** | 【新增设计】本版不含 `kind=delete` 能力（§0.2） |
 

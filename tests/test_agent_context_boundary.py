@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import os
 import subprocess
 from pathlib import Path
@@ -99,7 +100,9 @@ def test_runtime_launcher_does_not_fallback_to_legacy_backend_path() -> None:
     launcher = Path(__file__).parents[1] / "agent-runtime" / "bin" / "run.cmd"
     text = launcher.read_text(encoding="utf-8")
 
-    assert "Desktop\\FPA\\deepseek-harness" not in text
+    # 旧版 fallback 的形状是 "<桌面>\<某个项目目录>\deepseek-harness\..."；当前包装器指向
+    # "<桌面>\deepseek-harness-master\..."，形状不同。按形状判定，避免在测试里再写废弃项目名。
+    assert not re.search(r"Desktop[\\/][^\\/]+[\\/]deepseek-harness[\\/]", text)
     assert "AGENT_HARNESS_ROOT" in text or "deepseek-harness-master" in text
 
 

@@ -462,7 +462,7 @@ python tools\bootstrap_db.py
 python tools\migrate.py apply
 ```
 
-- **不要一域一库**（本行原先写作 `MYSQL_DATABASE='fpa_<你的域>'`，已被 负责人 推翻）：
+- **不要一域一库**（本行原先写作「每个域一个以旧前缀命名的库」，已被负责人推翻）：
   一域一库的代价高于并行隔离的收益 —— 它诱发过 `bootstrap_db.py` 的 `REVOKE ALL` 事故
   （新库建账号时把 `yuxin` 的授权一并收回），而且让集成验收（t9 的"69 条能力 ×
   21 条不变量"）无法在同一个库里核对。

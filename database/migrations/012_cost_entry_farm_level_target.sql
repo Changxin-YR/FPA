@@ -16,7 +16,7 @@
 --   target_type=farm        -> organization_id / farm_id 有值，area_id = NULL
 --   target_type=area        -> 三个键都有值（area_id = 该区域自己的 id）
 --   target_type=pond/batch  -> 三个键都有值（从目标对象上取）
--- 配套的代码改动在 `backend/fpa/domains/cost/entries_write.py::_resolve_tenant`。
+-- 配套的代码改动在 `backend/yuxin/domains/cost/entries_write.py::_resolve_tenant`。
 --
 -- 为什么"可空"而不是"填一个区域"：基地级成本不属于任何单个区域，
 -- 从该基地下随便挑一个区域填进去是**静默错归属**（这正是本项目一贯要根除的形态）。

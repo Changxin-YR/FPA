@@ -25,7 +25,7 @@
 #
 #   A. 参考实现 `deepseek-harness-master/packages/extensions/yuxin-agent-tools/cordis.patch.yml`
 #      —— 只贡献 insert 段（它的 config 形态是已验证可用的）；它本身没有任何 disabled 条目。
-#   B. 早期版本生产在用的 `FPA/backend/layers/features/agent/agent-restricted.patch.yml`
+#   B. 早期版本生产在用的 `backend/layers/features/agent/agent-restricted.patch.yml`
 #      —— 提供下面全部 disabled 条目（bash / pwsh / fs / web / subprocess / skill /
 #      subagent / terminal / sandbox / goal / plan-mode / commands / …）。
 #
@@ -50,7 +50,7 @@
 #
 #   A. 参考实现 `deepseek-harness-master/packages/extensions/yuxin-agent-tools/cordis.patch.yml`
 #      —— 只贡献上面的 insert 段（它的 config 形态是已验证可用的）；它本身没有任何 disabled 条目。
-#   B. 早期版本生产在用的 `FPA/backend/layers/features/agent/agent-restricted.patch.yml`
+#   B. 早期版本生产在用的 `backend/layers/features/agent/agent-restricted.patch.yml`
 #      —— 提供下面全部 52 条 disabled 条目（bash / pwsh / fs / web / subprocess / skill /
 #      subagent / terminal / sandbox / goal / plan-mode / commands / …）。
 #

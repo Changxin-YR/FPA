@@ -75,7 +75,7 @@
 ## 关于 `cordis.patch.yml`
 
 `insert` 段把本插件注入 Harness；下面是 **52 条** `disabled: true`，取自早期版本生产在用的
-`FPA/backend/layers/features/agent/agent-restricted.patch.yml`（参考实现那份只贡献 `insert` 形态，
+`backend/layers/features/agent/agent-restricted.patch.yml`（参考实现那份只贡献 `insert` 形态，
 它本身没有任何 `disabled` 条目）。并集 = 1 个 insert + 52 条 disabled。
 
 这 52 条是"禁止任意 Shell / 文件系统 / 网络 / 子代理"的落地点：少了任何一条都意味着模型多一条逃逸路径。

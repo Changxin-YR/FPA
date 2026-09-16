@@ -356,7 +356,7 @@ CREATE TABLE IF NOT EXISTS sales_receipts (
 -- 任何销售能力"，而报错文案是"权限不足"——看起来像配置错误，其实是迁移漏了。
 -- 这正是 `docs/DEVELOPMENT.md` §4 要根除的形态。
 --
--- 正确的位置是**从能力声明派生种子**（`fpa/kernel/capability.py` 的 REGISTRY
+-- 正确的位置是**从能力声明派生种子**（`backend/yuxin/kernel/capability.py` 的 REGISTRY
 -- 是唯一的权限码来源）。当前仓库**还没有**这个种子入口：`permissions` 表
 -- 在 001 里只建了表、没有任何 INSERT，`tools/bootstrap_db.py` 也不种它。
 -- 因此这是一个**独立的基础设施缺口**，影响全部 68 条能力，不属于 sales 域。

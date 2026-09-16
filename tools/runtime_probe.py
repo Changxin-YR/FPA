@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import re
 import os
 import shutil
 import sys
@@ -49,7 +50,12 @@ def main() -> int:
     if dsh_bin and dsh_bin.name.lower() == "run.cmd":
         launcher = dsh_bin.read_text(encoding="utf-8", errors="replace")
         runtime = _value("DSH_NODE_RUNTIME")
-        fallback_is_old_project = "\\Desktop\\FPA\\deepseek-harness" in launcher
+        # 旧版本的 fallback 指向 "<桌面>\<某个项目目录>\deepseek-harness\..."，与当前包装器
+        # 指向的 "<桌面>\deepseek-harness-master\..." 形状不同。这里按**路径形状**判定，
+        # 不再在代码里写下已经废弃的项目名。
+        fallback_is_old_project = bool(
+            re.search(r"Desktop[\\/][^\\/]+[\\/]deepseek-harness[\\/]", launcher)
+        )
         runtime_entry = Path(runtime) / "node_modules" / "@deepseek-ai" / "dsh" / "lib" / "bin.js" if runtime else None
         source_entry = harness_root / "apps" / "cli" / "lib" / "bin.js" if harness_root else None
         if fallback_is_old_project and not runtime:

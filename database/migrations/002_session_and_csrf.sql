@@ -8,8 +8,8 @@
 --
 -- 哈希方案我会更满意（库泄露也拿不到令牌），但它的可行前提是前端能读到一个
 -- **独立于服务端存储**的副本，而那正是 Cookie。所以：
---     * 会话凭据（fpa_session）→ HttpOnly，服务端只存 sha256，不可还原
---     * CSRF 令牌（fpa_csrf）  → 非 HttpOnly，服务端存原值，用于比对
+--     * 会话凭据（yuxin_session）→ HttpOnly，服务端只存 sha256，不可还原
+--     * CSRF 令牌（yuxin_csrf）  → 非 HttpOnly，服务端存原值，用于比对
 -- 两者安全等级不同，处理方式不同，这是刻意的。
 --
 -- 迁移必须**可重入**：MySQL 的 DDL 不回滚，失败后要能直接重跑。
@@ -24,10 +24,10 @@ SET NAMES utf8mb4;
 -- 建完立即删除，不留残留对象。
 -- ---------------------------------------------------------------------------
 
-DROP PROCEDURE IF EXISTS fpa_add_column_if_missing;
+DROP PROCEDURE IF EXISTS yuxin_add_column_if_missing;
 
 DELIMITER $$
-CREATE PROCEDURE fpa_add_column_if_missing(
+CREATE PROCEDURE yuxin_add_column_if_missing(
   IN p_table VARCHAR(64),
   IN p_column VARCHAR(64),
   IN p_definition VARCHAR(255)
@@ -47,12 +47,12 @@ BEGIN
 END$$
 DELIMITER ;
 
-CALL fpa_add_column_if_missing('sessions', 'csrf_token', "VARCHAR(128) NOT NULL DEFAULT '' AFTER csrf_hash");
-CALL fpa_add_column_if_missing('users', 'failed_login_count', 'INT UNSIGNED NOT NULL DEFAULT 0');
-CALL fpa_add_column_if_missing('users', 'locked_until', 'DATETIME NULL');
-CALL fpa_add_column_if_missing('users', 'last_login_at', 'DATETIME NULL');
+CALL yuxin_add_column_if_missing('sessions', 'csrf_token', "VARCHAR(128) NOT NULL DEFAULT '' AFTER csrf_hash");
+CALL yuxin_add_column_if_missing('users', 'failed_login_count', 'INT UNSIGNED NOT NULL DEFAULT 0');
+CALL yuxin_add_column_if_missing('users', 'locked_until', 'DATETIME NULL');
+CALL yuxin_add_column_if_missing('users', 'last_login_at', 'DATETIME NULL');
 
-DROP PROCEDURE IF EXISTS fpa_add_column_if_missing;
+DROP PROCEDURE IF EXISTS yuxin_add_column_if_missing;
 
 -- ---------------------------------------------------------------------------
 -- 用户的默认数据范围（个人范围）：任何新用户至少能看自己创建的数据。

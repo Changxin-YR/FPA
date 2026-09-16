@@ -38,10 +38,10 @@
 
 SET NAMES utf8mb4;
 
-DROP PROCEDURE IF EXISTS fpa_add_column_if_missing;
+DROP PROCEDURE IF EXISTS yuxin_add_column_if_missing;
 
 DELIMITER $$
-CREATE PROCEDURE fpa_add_column_if_missing(
+CREATE PROCEDURE yuxin_add_column_if_missing(
   IN p_table VARCHAR(64),
   IN p_column VARCHAR(64),
   IN p_definition VARCHAR(255)
@@ -61,12 +61,12 @@ BEGIN
 END$$
 DELIMITER ;
 
-CALL fpa_add_column_if_missing(
+CALL yuxin_add_column_if_missing(
   'feedings', 'warehouse_id',
   'BIGINT UNSIGNED NULL COMMENT ''指定出库仓（可选）。为空则由 warehouse 域按默认仓 + FEFO 解析''');
 
-CALL fpa_add_column_if_missing(
+CALL yuxin_add_column_if_missing(
   'feedings', 'lot_no',
   'VARCHAR(64) NULL COMMENT ''指定物料批次号（可选）。为空则由 warehouse 域按 FEFO 解析；此处仅作提示，实际扣减仍由 warehouse 域判定''');
 
-DROP PROCEDURE IF EXISTS fpa_add_column_if_missing;
+DROP PROCEDURE IF EXISTS yuxin_add_column_if_missing;
