@@ -59,6 +59,12 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "backend"))
 sys.path.insert(0, str(ROOT / "tools"))
 
+#: SDK 的 **Python** 包路径（`deepseek_harness` 所在目录）。用 `pip install -e` 装过就不需要设。
+#: 与 `tools/harness_smoke.py` 同一个键——两条真模型链路用同一套环境变量，少一个键就少一条链路。
+_sdk_env = os.environ.get("DSH_SDK_PYTHONPATH", "").strip()
+if _sdk_env:
+    sys.path.insert(0, _sdk_env)
+
 import pymysql  # noqa: E402
 
 FAILURES = 0

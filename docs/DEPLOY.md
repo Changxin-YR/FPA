@@ -35,6 +35,9 @@ cd agent-runtime; npm run build; cd ..
 python tools\live_agent_e2e.py      # 第 5 步重建/重装插件，并跑一遍真模型闭环
 # 或手动：把 agent-runtime\lib\* 与 package.json 复制到
 #   <DSH_HOME>\profiles\sdk\node_modules\@yuxin\dsh-biz-tools\
+# ★ 还要放一份「只含 insert」的发布副本，且**不能**直接拷 agent-runtime\cordis.patch.yml
+#   （那是部署层 patch，带 52 条 disabled；两处都描述安全边界会被 harness_tools_audit 判红）：
+#   python -c "import sys;sys.path.insert(0,'tools');from pathlib import Path;from live_agent_e2e import _write_publish_manifest as w;w(Path('agent-runtime/cordis.patch.yml'), Path(r'<DSH_HOME>\profiles\sdk\node_modules\@yuxin\dsh-biz-tools\cordis.patch.yml'))"
 # 然后**重启后端**（Harness 会话按会话池存活，不重启会继续用旧插件）。
 ```
 
